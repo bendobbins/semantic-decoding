@@ -8,7 +8,8 @@ from Decoder import Decoder, Hypothesis
 from LanguageModel import LanguageModel
 
 from jiwer import wer
-from datasets import load_metric
+#from datasets import load_metric
+from evaluate import load as load_metric
 from bert_score import BERTScorer
 
 BAD_WORDS_PERCEIVED_SPEECH = frozenset(["sentence_start", "sentence_end", "br", "lg", "ls", "ns", "sp"])
@@ -80,9 +81,9 @@ class WER(object):
         scores = []
         for ref_seg, pred_seg in zip(ref, pred):
             if len(ref_seg) == 0 : error = 1.0
-            else: error = wer(ref_seg, pred_seg)
+            else: error = wer(" ".join(ref_seg), " ".join(pred_seg))
             if self.use_score: scores.append(1 - error)
-            else: use_score.append(error)
+            else: scores.append(error)
         return np.array(scores)
     
 """
@@ -96,7 +97,7 @@ class BLEU(object):
     def score(self, ref, pred):
         results = []
         for r, p in zip(ref, pred):
-            self.metric.add_batch(predictions=[p], references=[[r]])
+            self.metric.add_batch(predictions=[" ".join(p)], references=[[" ".join(r)]])
             results.append(self.metric.compute(max_order = self.n)["bleu"])
         return np.array(results)
     

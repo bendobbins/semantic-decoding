@@ -4,9 +4,10 @@ import numpy as np
 # paths
 
 REPO_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_LM_DIR = os.path.join(REPO_DIR, "data_lm")
-DATA_TRAIN_DIR = os.path.join(REPO_DIR, "data_train")
-DATA_TEST_DIR = os.path.join(REPO_DIR, "data_test")
+DATA_DIR = os.path.join(os.path.dirname(REPO_DIR), "data")
+DATA_LM_DIR = os.path.join(DATA_DIR, "data_lm")
+DATA_TRAIN_DIR = os.path.join(DATA_DIR, "data_train")
+DATA_TEST_DIR = os.path.join(DATA_DIR, "data_test")
 MODEL_DIR = os.path.join(REPO_DIR, "models")
 RESULT_DIR = os.path.join(REPO_DIR, "results")
 SCORE_DIR = os.path.join(REPO_DIR, "scores")
@@ -39,6 +40,12 @@ WINDOW = 20
 
 # devices
 
-GPT_DEVICE = "cuda"
-EM_DEVICE = "cuda"
-SM_DEVICE = "cuda"
+import torch
+def _best_device():
+    if torch.cuda.is_available(): return "cuda"
+    if torch.backends.mps.is_available(): return "mps"
+    return "cpu"
+
+GPT_DEVICE = _best_device()
+EM_DEVICE = _best_device()
+SM_DEVICE = _best_device()

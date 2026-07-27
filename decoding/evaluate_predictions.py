@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("--subject", type = str, required = True)
     parser.add_argument("--experiment", type = str, required = True)
     parser.add_argument("--task", type = str, required = True)
+    parser.add_argument("--model_dir", type = str, default = "models")
     parser.add_argument("--metrics", nargs = "+", type = str, default = ["WER", "BLEU", "METEOR", "BERT"])
     parser.add_argument("--references", nargs = "+", type = str, default = [])
     parser.add_argument("--null", type = int, default = 10)
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         score = "recall")
 
     # load prediction transcript
-    pred_path = os.path.join(config.RESULT_DIR, args.subject, args.experiment, args.task + ".npz")
+    pred_path = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment, args.task + ".npz")
     pred_data = np.load(pred_path)
     pred_words, pred_times = pred_data["words"], pred_data["times"]
 
@@ -51,7 +52,9 @@ if __name__ == "__main__":
         ref_words, ref_times = ref_data["words"], ref_data["times"]
 
         # segment prediction and reference words into windows
-        window_cutoffs = windows(*eval_segments[args.task], config.WINDOW)
+        # window_cutoffs = windows(*eval_segments[args.task], config.WINDOW)
+        # Do this because the task name may have a suffix (e.g., noise level) that is not in the eval_segments dictionary
+        window_cutoffs = windows(*eval_segments[args.task.split('_')[0]], config.WINDOW)
         ref_windows = segment_data(ref_words, ref_times, window_cutoffs)
         pred_windows = segment_data(pred_words, pred_times, window_cutoffs)
         null_window_list = [segment_data(null_words, pred_times, window_cutoffs) for null_words in null_word_list]
@@ -73,7 +76,7 @@ if __name__ == "__main__":
             story_zscores[(reference, mname)] = (story_scores[(reference, mname)].mean()
                                                  - story_null_scores.mean()) / story_null_scores.std()
     
-    save_location = os.path.join(config.REPO_DIR, "scores", args.subject, args.experiment)
+    save_location = os.path.join(config.REPO_DIR, "scores", args.model_dir, args.subject, args.experiment)
     os.makedirs(save_location, exist_ok = True)
     np.savez(os.path.join(save_location, args.task), 
              window_scores = window_scores, window_zscores = window_zscores, 
