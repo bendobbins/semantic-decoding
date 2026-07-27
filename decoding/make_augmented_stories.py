@@ -53,7 +53,7 @@ def _manifest_path(engine):
     return os.path.join(TRAIN, "aug_manifest_%s.json" % engine)
 
 
-def clean_engine(engine, subject, respdict):
+def clean_engine(engine, subject, respdict, model_root):
     """Remove all artifacts from a prior run of `engine` (for --force)."""
     for tg in glob.glob(os.path.join(STIM_DIR, "*__%s_v*.TextGrid" % engine)):
         os.remove(tg)
@@ -63,7 +63,7 @@ def clean_engine(engine, subject, respdict):
             respdict.pop(aug, None)
         os.remove(manifest)
     for path in (os.path.join(RESP_DIR, "%s_aug_%s" % (subject, engine)),
-                 os.path.join(config.MODEL_DIR, "%s_aug_%s" % (subject, engine))):
+                 os.path.join(model_root, "%s_aug_%s" % (subject, engine))):
         if os.path.isdir(path):
             shutil.rmtree(path)
     tr = os.path.join(TEST_RESP_DIR, "%s_aug_%s" % (subject, engine))
@@ -71,7 +71,7 @@ def clean_engine(engine, subject, respdict):
         os.unlink(tr)
 
 
-def build_response_condition(subject, cond_name, aug_to_base):
+def build_response_condition(subject, cond_name, aug_to_base, model_root):
     """Create train_response/<cond_name>/ with symlinks to all of the subject's
     training responses plus <aug>.hf5 -> <base>.hf5, then wire test_response + WR."""
     real = os.path.join(RESP_DIR, subject)
@@ -88,9 +88,9 @@ def build_response_condition(subject, cond_name, aug_to_base):
     if not os.path.exists(tr):
         os.symlink(subject, tr)
 
-    mdir = os.path.join(config.MODEL_DIR, cond_name)  # WR model is stimulus-agnostic -> reuse
+    mdir = os.path.join(model_root, cond_name)        # WR model is stimulus-agnostic -> reuse
     os.makedirs(mdir, exist_ok=True)
-    for wr in glob.glob(os.path.join(config.MODEL_DIR, subject, "word_rate_model_*.npz")):
+    for wr in glob.glob(os.path.join(model_root, subject, "word_rate_model_*.npz")):
         shutil.copyfile(wr, os.path.join(mdir, os.path.basename(wr)))
 
 
@@ -105,6 +105,7 @@ if __name__ == "__main__":
     parser.add_argument("--swap_rate", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--gpt", type=str, default="perceived")
+    parser.add_argument("--model_dir", type=str, default="models")
     parser.add_argument("--llm_model", type=str, default="claude-opus-4-8")
     parser.add_argument("--no_matched", action="store_true",
                         help="disable matched-dose intersection (each engine fills all it can)")
@@ -117,6 +118,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     matched = not args.no_matched
+    model_root = os.path.join(config.REPO_DIR, args.model_dir)
     ua.ensure_nltk()
     vocab, vocab_set = ua.load_vocab(args.gpt)
 
@@ -149,7 +151,7 @@ if __name__ == "__main__":
             if os.path.isdir(pdir) or os.path.exists(_manifest_path(name)):
                 if not args.force:
                     raise SystemExit("artifacts exist for engine '%s'; use --force to regenerate" % name)
-                clean_engine(name, args.subject, respdict)
+                clean_engine(name, args.subject, respdict, model_root)
 
     manifest_data = {name: {} for name in args.engines}
     report_rows = []
@@ -190,11 +192,12 @@ if __name__ == "__main__":
     _save_json(os.path.join(TRAIN, "respdict.json"), respdict)
     for name in args.engines:
         _save_json(_manifest_path(name), manifest_data[name])
-        build_response_condition(args.subject, "%s_aug_%s" % (args.subject, name), manifest_data[name])
+        build_response_condition(args.subject, "%s_aug_%s" % (args.subject, name),
+                                 manifest_data[name], model_root)
     if not args.no_baseline:
         base_cond = "%s_base" % args.subject
         if not os.path.isdir(os.path.join(RESP_DIR, base_cond)):
-            build_response_condition(args.subject, base_cond, {})
+            build_response_condition(args.subject, base_cond, {}, model_root)
     if "llm" in engines:
         engines["llm"]._flush()
 
