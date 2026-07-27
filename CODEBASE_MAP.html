@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semantic Decoding — Codebase Map</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2a3242;
+    --ink:#e6edf3; --muted:#9aa7b4; --faint:#6b7785;
+    --data:#3fb950;      /* green  - data / I/O */
+    --enc:#58a6ff;       /* blue   - encoder */
+    --dec:#bc8cff;       /* purple - decoder */
+    --gpt:#f778ba;       /* pink   - GPT / language model */
+    --eval:#e3b341;      /* amber  - evaluation */
+    --warn:#ff7b72;      /* red    - heavy compute */
+    --radius:12px;
+    --mono:"SF Mono",ui-monospace,"Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+       -webkit-font-smoothing:antialiased;font-size:15px}
+  a{color:var(--enc);text-decoration:none}
+  code,.mono{font-family:var(--mono);font-size:.88em}
+
+  header{padding:34px 28px 22px;border-bottom:1px solid var(--line);
+    background:radial-gradient(1200px 300px at 12% -40%,rgba(88,166,255,.18),transparent),
+               radial-gradient(900px 300px at 85% -60%,rgba(188,140,255,.16),transparent),var(--panel)}
+  header h1{margin:0 0 6px;font-size:25px;letter-spacing:-.3px}
+  header p{margin:0;color:var(--muted);max-width:880px}
+  .repo-tag{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--faint);
+    border:1px solid var(--line);border-radius:6px;padding:3px 9px}
+
+  nav{position:sticky;top:0;z-index:50;display:flex;gap:4px;flex-wrap:wrap;padding:10px 22px;
+    background:rgba(13,17,23,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav button{font-family:var(--sans);font-size:14px;color:var(--muted);background:transparent;
+    border:1px solid transparent;border-radius:8px;padding:8px 14px;cursor:pointer;transition:.15s}
+  nav button:hover{color:var(--ink);background:var(--panel2)}
+  nav button.active{color:var(--ink);background:var(--panel2);border-color:var(--line)}
+
+  main{max-width:1120px;margin:0 auto;padding:26px 22px 90px}
+  .tab{display:none;animation:fade .25s ease}
+  .tab.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:1.3px;color:var(--faint);
+    margin:34px 0 14px;font-weight:600}
+  h2.sec:first-child{margin-top:6px}
+  .lead{color:var(--muted);max-width:880px;margin:0 0 8px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin:12px 0}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:820px){.g2,.g3{grid-template-columns:1fr}}
+
+  /* file chips */
+  .chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer;
+    color:var(--ink);transition:.12s;white-space:nowrap}
+  .chip:hover{border-color:var(--enc);background:#202938}
+  .chip:before{content:"";width:7px;height:7px;border-radius:2px;background:var(--faint)}
+  .chip.enc:before{background:var(--enc)} .chip.dec:before{background:var(--dec)}
+  .chip.data:before{background:var(--data)} .chip.gpt:before{background:var(--gpt)}
+  .chip.eval:before{background:var(--eval)} .chip.cfg:before{background:var(--faint)}
+  .chip .ln{color:var(--faint)}
+  .copied{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--enc);color:#06122a;
+    padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:99}
+  .copied.show{opacity:1}
+
+  /* pipeline */
+  .pipe{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .stage{flex:1;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;position:relative;margin:8px}
+  .stage .num{font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .stage h3{margin:4px 0 6px;font-size:16px}
+  .stage p{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+  .stage.s-enc{border-top:3px solid var(--enc)} .stage.s-wr{border-top:3px solid var(--gpt)}
+  .stage.s-dec{border-top:3px solid var(--dec)} .stage.s-ev{border-top:3px solid var(--eval)}
+  .arrow{align-self:center;color:var(--faint);font-size:22px;padding:0 2px}
+  @media(max-width:820px){.arrow{transform:rotate(90deg)}}
+
+  /* flow rows */
+  .flow{counter-reset:step}
+  .node{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:1px dashed var(--line)}
+  .node:first-child{border-top:none}
+  .node .dot{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--mono);font-size:13px;font-weight:700;color:#06122a;counter-increment:step}
+  .node .dot:after{content:counter(step)}
+  .node.d-data .dot{background:var(--data)} .node.d-enc .dot{background:var(--enc)}
+  .node.d-dec .dot{background:var(--dec)} .node.d-gpt .dot{background:var(--gpt)}
+  .node.d-eval .dot{background:var(--eval)}
+  .node .body{flex:1;min-width:0}
+  .node .body .t{font-weight:600;margin-bottom:2px}
+  .node .body .d{color:var(--muted);font-size:13.5px;margin-bottom:7px}
+  .node .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .shape{font-family:var(--mono);font-size:11.5px;color:var(--data);border:1px solid #1f3a26;background:#0f1f14;
+    border-radius:5px;padding:1px 7px}
+
+  .pill{display:inline-block;font-size:11px;font-weight:600;border-radius:20px;padding:2px 10px;border:1px solid}
+  .p-light{color:var(--data);border-color:#1f3a26;background:#0f1f14}
+  .p-mod{color:var(--eval);border-color:#3a3116;background:#1f1a0c}
+  .p-heavy{color:var(--warn);border-color:#3a1d1a;background:#1f0f0d}
+  .p-gpu{color:var(--gpt);border-color:#3a1830;background:#1f0d1a}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--faint);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td .desc{color:var(--muted)}
+  tr:hover td{background:var(--panel2)}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:2px 0 4px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  .callout{border-left:3px solid var(--enc);background:var(--panel2);border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0}
+  .callout.dec{border-color:var(--dec)} .callout.warn{border-color:var(--warn)}
+  .callout .h{font-weight:700;margin-bottom:3px;font-size:14px}
+  .callout p{margin:4px 0;color:var(--muted);font-size:13.5px}
+
+  .kpi{display:flex;gap:12px;flex-wrap:wrap}
+  .kpi .box{flex:1;min-width:130px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .kpi .v{font-size:22px;font-weight:700;font-family:var(--mono)}
+  .kpi .l{font-size:12px;color:var(--faint);margin-top:2px}
+
+  ul.tight{margin:6px 0;padding-left:18px} ul.tight li{margin:4px 0;color:var(--muted)}
+  .hl{color:var(--ink);font-weight:600}
+  .inline-k{font-family:var(--mono);font-size:.86em;background:var(--panel2);border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;color:var(--ink)}
+  footer{color:var(--faint);font-size:12px;text-align:center;padding:30px 20px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Semantic Decoding — Interactive Codebase Map</h1>
+  <p>A navigable guide to the Tang, LeBel, Jain &amp; Huth (2023) language-decoding pipeline: how it's structured,
+     how training and testing work, what they cost, and <em>exactly which file and line</em> feeds data into the
+     encoder and the decoder. Click any <span class="mono" style="color:var(--enc)">file:line</span> chip to copy the reference.</p>
+  <div class="repo-tag">repo: semantic-decoding · core code in decoding/ · 20 Python files</div>
+</header>
+
+<nav>
+  <button class="active" data-tab="overview">Overview</button>
+  <button data-tab="files">File Map</button>
+  <button data-tab="train">Training</button>
+  <button data-tab="test">Testing / Decoding</button>
+  <button data-tab="io">Input Points</button>
+  <button data-tab="compute">Compute Cost</button>
+</nav>
+
+<main>
+
+<!-- ===================== OVERVIEW ===================== -->
+<section class="tab active" id="overview">
+  <h2 class="sec">The one-paragraph mental model</h2>
+  <div class="card">
+    <p class="lead">The system never decodes brain&nbsp;→&nbsp;words directly. Instead it learns a <span class="hl">forward
+    (encoding) model</span> that predicts <em>brain response from words</em>, then <span class="hl">inverts it at test
+    time</span> by guessing word sequences and keeping whichever ones would have best produced the brain activity
+    actually recorded. A language model (the original OpenAI GPT) proposes plausible next words; the encoding model
+    scores them against the real fMRI; a beam search keeps the best running sentences.</p>
+    <div class="legend" style="margin-top:14px">
+      <span><span class="sw" style="background:var(--data)"></span>data / I/O</span>
+      <span><span class="sw" style="background:var(--enc)"></span>encoder (forward model)</span>
+      <span><span class="sw" style="background:var(--dec)"></span>decoder (beam search)</span>
+      <span><span class="sw" style="background:var(--gpt)"></span>GPT / language model</span>
+      <span><span class="sw" style="background:var(--eval)"></span>evaluation</span>
+    </div>
+  </div>
+
+  <h2 class="sec">The pipeline — 4 scripts, run in order</h2>
+  <div class="pipe">
+    <div class="stage s-enc">
+      <div class="num">STEP 1 · TRAIN</div>
+      <h3>Encoding model</h3>
+      <p>Learn weights mapping GPT features of the stimulus → each brain voxel's response.</p>
+      <span class="chip enc" data-ref="decoding/train_EM.py">train_EM.py</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="stage s-wr">
+      <div class="num">STEP 2 · TRAIN</div>
+      <h3>Word-rate model</h3>
+      <p>Learn to predict <em>how many words</em> occur at each moment from brain activity.</p>
+      <span class="chip gpt" data-ref="decoding/train_WR.py">train_WR.py</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="stage s-dec">
+      <div class="num">STEP 3 · TEST</div>
+      <h3>Run decoder</h3>
+      <p>Beam-search word sequences that best explain held-out brain data.</p>
+      <span class="chip dec" data-ref="decoding/run_decoder.py">run_decoder.py</span>
+    </div>
+    <div class="arrow">→</div>
+    <div class="stage s-ev">
+      <div class="num">STEP 4 · SCORE</div>
+      <h3>Evaluate</h3>
+      <p>Compare decoded transcript to the reference with WER / BLEU / METEOR / BERTScore.</p>
+      <span class="chip eval" data-ref="decoding/evaluate_predictions.py">evaluate_predictions.py</span>
+    </div>
+  </div>
+
+  <h2 class="sec">How the two halves relate</h2>
+  <div class="grid g2">
+    <div class="card" style="border-top:3px solid var(--enc)">
+      <h3 style="margin:0 0 6px">Forward model (training)</h3>
+      <p class="lead" style="font-size:14px">Words → GPT semantic features → linear ridge weights → predicted fMRI.
+      Fit once per subject. Produces <code>encoding_model_*.npz</code> (weights + a noise covariance model).</p>
+      <p style="font-size:13px;color:var(--faint);margin:8px 0 0">Direction: <span class="mono" style="color:var(--enc)">stimulus ⟶ brain</span></p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--dec)">
+      <h3 style="margin:0 0 6px">Inverse search (testing)</h3>
+      <p class="lead" style="font-size:14px">For each moment, GPT proposes candidate words; each candidate is pushed
+      <em>through</em> the frozen forward model and scored by how well its predicted fMRI matches the recording. Beam
+      search keeps the best sentences.</p>
+      <p style="font-size:13px;color:var(--faint);margin:8px 0 0">Direction: <span class="mono" style="color:var(--dec)">brain ⟵ guess-and-check words</span></p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="h">Where to start reading</div>
+    <p>Read <span class="chip enc" data-ref="decoding/train_EM.py">train_EM.py</span> top-to-bottom first (only 63 lines — it's the
+    whole training story), then <span class="chip dec" data-ref="decoding/run_decoder.py">run_decoder.py</span> (84 lines — the whole test
+    story). Everything else is a helper class those two scripts orchestrate. <span class="hl">Config lives in one place:</span>
+    <span class="chip cfg" data-ref="decoding/config.py">config.py</span>.</p>
+  </div>
+</section>
+
+<!-- ===================== FILE MAP ===================== -->
+<section class="tab" id="files">
+  <h2 class="sec">Every file, what it's for, and the function that matters</h2>
+  <p class="lead">Color dot = role. The 4 top-level scripts are entry points; everything under them is a library.
+     Click a chip to copy its path.</p>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>File</th><th>Role</th><th>Key function(s)</th><th>Heat</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="chip enc" data-ref="decoding/train_EM.py">train_EM.py</span></td>
+          <td class="desc">Entry · fit the encoding (forward) model + noise model for one subject</td>
+          <td class="mono">bootstrap_ridge, get_stim, get_resp</td>
+          <td><span class="pill p-heavy">heavy</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip gpt" data-ref="decoding/train_WR.py">train_WR.py</span></td>
+          <td class="desc">Entry · fit the word-rate model (words-per-TR from brain) for speech &amp; auditory ROIs</td>
+          <td class="mono">bootstrap_ridge, chunksums</td>
+          <td><span class="pill p-light">light</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip dec" data-ref="decoding/run_decoder.py">run_decoder.py</span></td>
+          <td class="desc">Entry · the decoder — beam search over words using LM + encoding model</td>
+          <td class="mono">Decoder loop L66–79</td>
+          <td><span class="pill p-gpu">GPU-bound</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip eval" data-ref="decoding/evaluate_predictions.py">evaluate_predictions.py</span></td>
+          <td class="desc">Entry · score decoded vs reference transcript in 20s windows, z-scored vs null</td>
+          <td class="mono">WER/BLEU/METEOR/BERTSCORE</td>
+          <td><span class="pill p-mod">moderate</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip cfg" data-ref="decoding/config.py">config.py</span></td>
+          <td class="desc">All paths + every hyperparameter (delays, alphas, beam width, layer…). Device auto-select.</td>
+          <td class="mono">constants only</td>
+          <td><span class="pill p-light">trivial</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip gpt" data-ref="decoding/GPT.py">GPT.py</span></td>
+          <td class="desc">Thin wrapper over HuggingFace OpenAI-GPT. Two jobs: hidden embeddings + next-word probs.</td>
+          <td class="mono">get_hidden, get_probs</td>
+          <td><span class="pill p-gpu">GPU</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip enc" data-ref="decoding/StimulusModel.py">StimulusModel.py</span></td>
+          <td class="desc">Turns words into model-ready features. <code>LMFeatures</code> (train) + <code>StimulusModel</code> (decode-time variants) + Lanczos helpers.</td>
+          <td class="mono">make_stim, extend, make_variants</td>
+          <td><span class="pill p-mod">moderate</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip enc" data-ref="decoding/EncodingModel.py">EncodingModel.py</span></td>
+          <td class="desc">The likelihood P(response | words). 26 lines. This is the scorer the decoder calls every step.</td>
+          <td class="mono">prs()</td>
+          <td><span class="pill p-light">light (GPU)</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip dec" data-ref="decoding/Decoder.py">Decoder.py</span></td>
+          <td class="desc">Beam search bookkeeping. <code>Decoder</code> manages the beam; <code>Hypothesis</code> is one candidate sentence.</td>
+          <td class="mono">get_hypotheses, extend</td>
+          <td><span class="pill p-light">light</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip gpt" data-ref="decoding/LanguageModel.py">LanguageModel.py</span></td>
+          <td class="desc">Proposes candidate next words via nucleus sampling; filters repeats/stopwords.</td>
+          <td class="mono">beam_propose, get_nucleus</td>
+          <td><span class="pill p-gpu">GPU</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip data" data-ref="decoding/utils_stim.py">utils_stim.py</span></td>
+          <td class="desc">Stimulus ingestion: words+times → GPT features → downsample → delays. Also word-time prediction.</td>
+          <td class="mono">get_stim, predict_word_times</td>
+          <td><span class="pill p-mod">moderate</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip data" data-ref="decoding/utils_resp.py">utils_resp.py</span></td>
+          <td class="desc">Response ingestion: load fMRI <code>.hf5</code> files into arrays. 19 lines.</td>
+          <td class="mono">get_resp</td>
+          <td><span class="pill p-light">I/O</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip eval" data-ref="decoding/utils_eval.py">utils_eval.py</span></td>
+          <td class="desc">Metric classes (WER, BLEU, METEOR, BERTScore), windowing, null-sequence generation.</td>
+          <td class="mono">WER, BLEU, BERTSCORE</td>
+          <td><span class="pill p-mod">moderate</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip data" data-ref="decoding/utils_ridge/ridge.py">utils_ridge/ridge.py</span></td>
+          <td class="desc">The regression engine. SVD-based ridge + bootstrapped alpha selection. The compute workhorse of training.</td>
+          <td class="mono">ridge, bootstrap_ridge</td>
+          <td><span class="pill p-heavy">heavy</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip data" data-ref="decoding/utils_ridge/">utils_ridge/ (7 more)</span></td>
+          <td class="desc">DataSequence, interpdata (Lanczos), textgrid parsing, stimulus_utils (TR timing), dsutils, util, utils.</td>
+          <td class="mono">make_delayed, lanczosinterp2D</td>
+          <td><span class="pill p-light">support</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="sec">Data folders (not code)</h2>
+  <div class="grid g3">
+    <div class="card"><h3 style="margin:0 0 4px;font-size:15px">data_lm/</h3>
+      <p class="lead" style="font-size:13px">The language model. <code>perceived/</code> &amp; <code>imagined/</code> GPT checkpoints (~408&nbsp;MB each), vocab (17,379), and the 6,867-word <code>decoder_vocab.json</code>.</p></div>
+    <div class="card"><h3 style="margin:0 0 4px;font-size:15px">data_train/</h3>
+      <p class="lead" style="font-size:13px"><code>train_response/[S1–S3]/*.hf5</code> (fMRI), <code>train_stimulus/</code> (TextGrids), <code>ROIs/</code>, and <code>sess_to_story.json</code> (82 stories).</p></div>
+    <div class="card"><h3 style="margin:0 0 4px;font-size:15px">data_test/ · ds003020/</h3>
+      <p class="lead" style="font-size:13px">Held-out test responses for 4 experiments (perceived speech/movie/multispeaker, imagined). <code>ds003020/</code> is the raw OpenNeuro dataset.</p></div>
+  </div>
+</section>
+
+<!-- ===================== TRAINING ===================== -->
+<section class="tab" id="train">
+  <h2 class="sec">Training A — the encoding model</h2>
+  <p class="lead">File: <span class="chip enc" data-ref="decoding/train_EM.py">train_EM.py</span> ·
+     Command: <code class="mono">python3 decoding/train_EM.py --subject S1 --gpt perceived</code></p>
+
+  <div class="card flow">
+    <div class="node d-data">
+      <div class="dot"></div>
+      <div class="body">
+        <div class="t">Pick training stories</div>
+        <div class="d">15 fMRI sessions → 82 unique stories listed in <code>sess_to_story.json</code>.</div>
+        <div class="meta"><span class="chip enc" data-ref="decoding/train_EM.py:22">train_EM.py:22–27</span></div>
+      </div>
+    </div>
+    <div class="node d-gpt">
+      <div class="dot"></div>
+      <div class="body">
+        <div class="t">Load GPT + feature extractor</div>
+        <div class="d">OpenAI-GPT checkpoint (12 layers, 768-dim). <code>LMFeatures</code> will read hidden <span class="hl">layer 9</span> with a 5-word context.</div>
+        <div class="meta"><span class="chip enc" data-ref="decoding/train_EM.py:30">train_EM.py:30–33</span><span class="chip gpt" data-ref="decoding/GPT.py:38">GPT.get_hidden</span></div>
+      </div>
+    </div>
+    <div class="node d-enc" style="border-top:2px solid var(--enc)">
+      <div class="dot"></div>
+      <div class="body">
+        <div class="t">⮕ STIMULUS enters here — build the feature matrix</div>
+        <div class="d"><code>get_stim()</code>: each story's words → GPT layer-9 embeddings → Lanczos-downsample from word times to the 2-second fMRI TR grid → z-score → stack 4 finite-impulse-response delays (1–4 TRs).</div>
+        <div class="meta">
+          <span class="chip enc" data-ref="decoding/train_EM.py:36">train_EM.py:36</span>
+          <span class="chip data" data-ref="decoding/utils_stim.py:21">utils_stim.get_stim</span>
+          <span class="chip enc" data-ref="decoding/StimulusModel.py:86">LMFeatures.make_stim</span>
+          <span class="shape">rstim ≈ 27,449 TRs × 3,072 feats</span>
+        </div>
+      </div>
+    </div>
+    <div class="node d-data" style="border-top:2px solid var(--data)">
+      <div class="dot"></div>
+      <div class="body">
+        <div class="t">⮕ BRAIN RESPONSE enters here</div>
+        <div class="d"><code>get_resp()</code> loads each story's <code>.hf5</code> fMRI and stacks them. Full cortex, ~81k voxels.</div>
+        <div class="meta">
+          <span class="chip data" data-ref="decoding/train_EM.py:37">train_EM.py:37</span>
+          <span class="chip data" data-ref="decoding/utils_resp.py:7">utils_resp.get_resp</span>
+          <span class="shape">rresp ≈ 27,449 TRs × 81,126 voxels</span>
+        </div>
+      </div>
+    </div>
+    <div class="node d-enc">
+      <div class="dot"></div>
+      <div class="body">
+        <div class="t">Fit ridge weights (the heavy step)</div>
+        <div class="d"><code>bootstrap_ridge</code>: 50 bootstrap resamples × 10 candidate α's, SVD-based, picks the best regularization per voxel. Then keep the <span class="hl">top 10,000 voxels</span> by bootstrap correlation.</div>
+        <div class="meta">
+          <span class="chip enc" data-ref="decoding/train_EM.py:39">train_EM.py:39–42</span>
+          <span class="chip data" data-ref="decoding/utils_ridge/ridge.py:185">bootstrap_ridge</span>
+          <span class="shape">weights = 3,072 × 81,126</span>
+          <span class="pill p-heavy">heavy</span>
+        </div>
+      </div>
+    </div>
+    <div class="node d-enc">
+      <div class="dot"></div>
+      <div class="body">
+        <div class="t">Estimate the noise model</div>
+        <div class="d">Leave-one-story-out across all 82 stories; accumulate the residual covariance over the kept voxels. This is what makes the test-time likelihood account for correlated voxel noise.</div>
+        <div class="meta">
+          <span class="chip enc" data-ref="decoding/train_EM.py:46">train_EM.py:46–56</span>
+          <span class="shape">noise_model = 10,000 × 10,000</span>
+          <span class="pill p-heavy">heavy</span>
+        </div>
+      </div>
+    </div>
+    <div class="node d-data">
+      <div class="dot"></div>
+      <div class="body">
+        <div class="t">Save</div>
+        <div class="d">One file: weights, noise_model, alphas, the 10k voxel indices, and normalization stats.</div>
+        <div class="meta"><span class="chip enc" data-ref="decoding/train_EM.py:61">train_EM.py:61</span><span class="shape">models/S1/encoding_model_perceived.npz</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="sec">Training B — the word-rate model</h2>
+  <p class="lead">File: <span class="chip gpt" data-ref="decoding/train_WR.py">train_WR.py</span> · Much lighter — only a couple ROIs, runs in minutes.
+     Predicts how many words occur per moment, so the decoder knows <em>when</em> to place words.</p>
+  <div class="card flow">
+    <div class="node d-data"><div class="dot"></div><div class="body">
+      <div class="t">Count words per TR</div>
+      <div class="d">From the same stimulus TextGrids: a smoothed word count for each 2s acquisition.</div>
+      <div class="meta"><span class="chip gpt" data-ref="decoding/train_WR.py:36">train_WR.py:36–45</span></div>
+    </div></div>
+    <div class="node d-data"><div class="dot"></div><div class="body">
+      <div class="t">Load ROI responses</div>
+      <div class="d">For <code>speech</code> (498 voxels) and <code>auditory</code> (1,431 voxels) ROIs separately; apply backward delays [−4…−1].</div>
+      <div class="meta"><span class="chip gpt" data-ref="decoding/train_WR.py:47">train_WR.py:47–49</span><span class="chip data" data-ref="decoding/utils_resp.py:7">get_resp(vox=…)</span></div>
+    </div></div>
+    <div class="node d-enc"><div class="dot"></div><div class="body">
+      <div class="t">Ridge-regress rate on responses &amp; save</div>
+      <div class="d">Two models: <code>word_rate_model_speech.npz</code> &amp; <code>word_rate_model_auditory.npz</code>.</div>
+      <div class="meta"><span class="chip gpt" data-ref="decoding/train_WR.py:51">train_WR.py:51–53</span></div>
+    </div></div>
+  </div>
+
+  <div class="callout">
+    <div class="h">Mental shortcut for training</div>
+    <p>The whole of training is "<span class="hl">build a feature matrix from words, build a response matrix from fMRI,
+    ridge-regress one onto the other</span>." The encoding model regresses 3,072 GPT features → 81k voxels; the word-rate
+    model regresses delayed ROI responses → a single words-per-TR number. Same engine
+    (<span class="chip data" data-ref="decoding/utils_ridge/ridge.py:185">bootstrap_ridge</span>), different inputs.</p>
+  </div>
+</section>
+
+<!-- ===================== TESTING ===================== -->
+<section class="tab" id="test">
+  <h2 class="sec">Testing — the decoder</h2>
+  <p class="lead">File: <span class="chip dec" data-ref="decoding/run_decoder.py">run_decoder.py</span> ·
+     Command: <code class="mono">python3 decoding/run_decoder.py --subject S1 --experiment perceived_speech --task &lt;story&gt;</code></p>
+
+  <h2 class="sec" style="margin-top:18px">Setup (before the loop)</h2>
+  <div class="card flow">
+    <div class="node d-dec"><div class="dot"></div><div class="body">
+      <div class="t">Pick checkpoint &amp; ROI from the experiment</div>
+      <div class="d">imagined → <code>imagined</code> GPT + speech ROI; perceived speech → <code>perceived</code> GPT + auditory ROI; movies/multispeaker → speech ROI.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:24">run_decoder.py:24–29</span></div>
+    </div></div>
+    <div class="node d-data" style="border-top:2px solid var(--data)"><div class="dot"></div><div class="body">
+      <div class="t">⮕ TEST BRAIN RESPONSE enters here</div>
+      <div class="d">Load the held-out <code>.hf5</code> for this subject/experiment/task. This is the signal the decoder must explain.</div>
+      <div class="meta"><span class="chip data" data-ref="decoding/run_decoder.py:32">run_decoder.py:32–34</span><span class="shape">resp = n_TRs × n_voxels</span></div>
+    </div></div>
+    <div class="node d-gpt"><div class="dot"></div><div class="body">
+      <div class="t">Build the language model + feature extractor</div>
+      <div class="d"><code>LanguageModel</code> (nucleus proposals over the 6,867-word decoder vocab) and <code>LMFeatures</code> (same layer-9 extractor as training).</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:37">run_decoder.py:37–43</span><span class="chip gpt" data-ref="decoding/LanguageModel.py:49">beam_propose</span></div>
+    </div></div>
+    <div class="node d-enc" style="border-top:2px solid var(--enc)"><div class="dot"></div><div class="body">
+      <div class="t">⮕ RESPONSE enters the EncodingModel (the scorer)</div>
+      <div class="d">Load the trained weights + noise model; wrap them with the test <code>resp</code> in an <code>EncodingModel</code>. From now on, <code>em.prs(stim, trs)</code> returns the log-likelihood of the real brain data given any candidate stimulus.</div>
+      <div class="meta">
+        <span class="chip dec" data-ref="decoding/run_decoder.py:46">run_decoder.py:46–55</span>
+        <span class="chip enc" data-ref="decoding/EncodingModel.py:8">EncodingModel.__init__</span>
+        <span class="chip enc" data-ref="decoding/EncodingModel.py:20">EncodingModel.prs</span>
+      </div>
+    </div></div>
+    <div class="node d-dec"><div class="dot"></div><div class="body">
+      <div class="t">Predict word timing</div>
+      <div class="d">Word-rate model → expected words per TR → evenly-spaced candidate <code>word_times</code>. The beam search runs once per word time.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:58">run_decoder.py:58–61</span><span class="chip data" data-ref="decoding/utils_stim.py:49">predict_word_times</span></div>
+    </div></div>
+  </div>
+
+  <h2 class="sec">The beam-search loop — once per predicted word time</h2>
+  <p class="lead">This is the heart of the decoder: <span class="chip dec" data-ref="decoding/run_decoder.py:66">run_decoder.py:66–79</span>. Beam width = 200.</p>
+  <div class="card flow">
+    <div class="node d-dec"><div class="dot"></div><div class="body">
+      <div class="t">Which TRs does this word touch?</div>
+      <div class="d"><code>affected_trs</code> — only those fMRI time points need re-scoring for this word, which keeps the inner loop cheap.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:67">run_decoder.py:67–68</span><span class="chip enc" data-ref="decoding/StimulusModel.py:17">affected_trs</span></div>
+    </div></div>
+    <div class="node d-gpt"><div class="dot"></div><div class="body">
+      <div class="t">Propose candidate next words</div>
+      <div class="d"><code>lm.beam_propose</code> runs GPT on each beam hypothesis' context and returns a nucleus (top-probability set) of next-word candidates, with repeats/stopwords filtered.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:69">run_decoder.py:69</span><span class="chip gpt" data-ref="decoding/LanguageModel.py:49">beam_propose</span><span class="chip gpt" data-ref="decoding/GPT.py:47">GPT.get_probs</span></div>
+    </div></div>
+    <div class="node d-gpt"><div class="dot"></div><div class="body">
+      <div class="t">Embed each extended hypothesis</div>
+      <div class="d">For every candidate word appended to every beam sentence, <code>features.extend</code> gets its GPT layer-9 embedding.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:74">run_decoder.py:74</span><span class="chip enc" data-ref="decoding/StimulusModel.py:77">LMFeatures.extend</span></div>
+    </div></div>
+    <div class="node d-enc"><div class="dot"></div><div class="body">
+      <div class="t">Build candidate stimulus features</div>
+      <div class="d"><code>sm.make_variants</code> downsamples + normalizes + delays each candidate into the encoding model's feature space — only on the affected TRs.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:75">run_decoder.py:75</span><span class="chip enc" data-ref="decoding/StimulusModel.py:58">StimulusModel.make_variants</span></div>
+    </div></div>
+    <div class="node d-enc"><div class="dot"></div><div class="body">
+      <div class="t">Score against the real brain data</div>
+      <div class="d"><code>em.prs(stim, trs)</code> = log P(recorded response | candidate words), using the encoding weights + noise precision. This is the number that decides which sentences survive.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:76">run_decoder.py:76</span><span class="chip enc" data-ref="decoding/EncodingModel.py:20">EncodingModel.prs</span></div>
+    </div></div>
+    <div class="node d-dec"><div class="dot"></div><div class="body">
+      <div class="t">Add to pool, then prune the beam</div>
+      <div class="d">Combine LM probability + encoding likelihood; <code>decoder.extend</code> keeps only the best 200 running sentences and moves to the next word time.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:77">run_decoder.py:77–79</span><span class="chip dec" data-ref="decoding/Decoder.py:38">add_extensions / extend</span></div>
+    </div></div>
+    <div class="node d-data"><div class="dot"></div><div class="body">
+      <div class="t">Save the winning sentence</div>
+      <div class="d">After the last word time, the top hypothesis' words + times are written out.</div>
+      <div class="meta"><span class="chip dec" data-ref="decoding/run_decoder.py:82">run_decoder.py:82–84</span><span class="shape">results/S1/perceived_speech/&lt;task&gt;.npz</span></div>
+    </div></div>
+  </div>
+
+  <div class="callout dec">
+    <div class="h">Why testing feels different from training</div>
+    <p>Training is a couple of big batch matrix operations. Testing is a <span class="hl">sequential loop</span>: every word
+    time depends on the surviving sentences from the previous one, and each step calls GPT several times. You can't
+    collapse it into one matmul — which is exactly why decoding is the GPU-bound, wall-clock-dominant stage.</p>
+  </div>
+</section>
+
+<!-- ===================== INPUT POINTS ===================== -->
+<section class="tab" id="io">
+  <h2 class="sec">The exact lines where data enters the models</h2>
+  <p class="lead">You asked specifically where inputs feed the encoder and the decoder. There are three injection points — two in
+     training, one at test — and they all route through tiny loader functions.</p>
+
+  <div class="grid g2">
+    <div class="card" style="border-left:3px solid var(--enc)">
+      <h3 style="margin:0 0 8px">① Encoder · stimulus in</h3>
+      <p class="lead" style="font-size:14px">Words become the encoder's <span class="hl">X</span> matrix.</p>
+      <table>
+        <tr><td>Call site</td><td><span class="chip enc" data-ref="decoding/train_EM.py:36">train_EM.py:36</span></td></tr>
+        <tr><td>Loader</td><td><span class="chip data" data-ref="decoding/utils_stim.py:21">utils_stim.py:21 · get_stim</span></td></tr>
+        <tr><td>Features from</td><td><span class="chip enc" data-ref="decoding/StimulusModel.py:86">StimulusModel.py:86 · make_stim</span> → <span class="chip gpt" data-ref="decoding/GPT.py:38">GPT.get_hidden</span></td></tr>
+        <tr><td>Becomes</td><td class="mono">rstim → bootstrap_ridge(arg 1)</td></tr>
+      </table>
+    </div>
+    <div class="card" style="border-left:3px solid var(--data)">
+      <h3 style="margin:0 0 8px">② Encoder · brain response in</h3>
+      <p class="lead" style="font-size:14px">fMRI becomes the encoder's <span class="hl">Y</span> matrix.</p>
+      <table>
+        <tr><td>Call site</td><td><span class="chip data" data-ref="decoding/train_EM.py:37">train_EM.py:37</span></td></tr>
+        <tr><td>Loader</td><td><span class="chip data" data-ref="decoding/utils_resp.py:7">utils_resp.py:7 · get_resp</span></td></tr>
+        <tr><td>Reads</td><td class="mono">data_train/train_response/S1/*.hf5</td></tr>
+        <tr><td>Becomes</td><td class="mono">rresp → bootstrap_ridge(arg 2)</td></tr>
+      </table>
+    </div>
+    <div class="card" style="border-left:3px solid var(--dec)">
+      <h3 style="margin:0 0 8px">③ Decoder · test brain response in</h3>
+      <p class="lead" style="font-size:14px">Held-out fMRI enters the scorer the decoder inverts.</p>
+      <table>
+        <tr><td>Load site</td><td><span class="chip data" data-ref="decoding/run_decoder.py:32">run_decoder.py:32</span></td></tr>
+        <tr><td>Enters model</td><td><span class="chip enc" data-ref="decoding/run_decoder.py:53">run_decoder.py:53 · EncodingModel(resp,…)</span></td></tr>
+        <tr><td>Used by</td><td><span class="chip enc" data-ref="decoding/EncodingModel.py:20">EncodingModel.py:20 · prs()</span> every loop step</td></tr>
+        <tr><td>Reads</td><td class="mono">data_test/test_response/S1/&lt;exp&gt;/&lt;task&gt;.hf5</td></tr>
+      </table>
+    </div>
+    <div class="card" style="border-left:3px solid var(--gpt)">
+      <h3 style="margin:0 0 8px">④ Decoder · candidate words in</h3>
+      <p class="lead" style="font-size:14px">The "guesses" the decoder scores come from GPT, not from data.</p>
+      <table>
+        <tr><td>Proposed at</td><td><span class="chip dec" data-ref="decoding/run_decoder.py:69">run_decoder.py:69 · lm.beam_propose</span></td></tr>
+        <tr><td>Embedded at</td><td><span class="chip dec" data-ref="decoding/run_decoder.py:74">run_decoder.py:74 · features.extend</span></td></tr>
+        <tr><td>Featurized at</td><td><span class="chip dec" data-ref="decoding/run_decoder.py:75">run_decoder.py:75 · sm.make_variants</span></td></tr>
+        <tr><td>Scored at</td><td><span class="chip dec" data-ref="decoding/run_decoder.py:76">run_decoder.py:76 · em.prs</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="h">One-line summary to remember</div>
+    <p><span class="hl">Encoder inputs</span> = <code>get_stim</code> (words→X) + <code>get_resp</code> (fMRI→Y), both in
+    <span class="chip enc" data-ref="decoding/train_EM.py:36">train_EM.py:36–37</span>. <span class="hl">Decoder input</span> =
+    test fMRI loaded at <span class="chip dec" data-ref="decoding/run_decoder.py:32">run_decoder.py:32</span> and handed to
+    <code>EncodingModel</code> at <span class="chip dec" data-ref="decoding/run_decoder.py:53">line 53</span>; candidate words are generated, not loaded.</p>
+  </div>
+</section>
+
+<!-- ===================== COMPUTE ===================== -->
+<section class="tab" id="compute">
+  <h2 class="sec">Problem dimensions (your actual data, S1)</h2>
+  <div class="kpi">
+    <div class="box"><div class="v">82</div><div class="l">training stories</div></div>
+    <div class="box"><div class="v">~27.4k</div><div class="l">training TRs (2s each)</div></div>
+    <div class="box"><div class="v">81,126</div><div class="l">voxels (full cortex)</div></div>
+    <div class="box"><div class="v">10,000</div><div class="l">voxels kept for encoding</div></div>
+    <div class="box"><div class="v">3,072</div><div class="l">features (768 × 4 delays)</div></div>
+    <div class="box"><div class="v">6,867</div><div class="l">decoder vocab words</div></div>
+  </div>
+
+  <h2 class="sec">Cost &amp; bottleneck per stage</h2>
+  <p class="lead">Heat reflects where time and memory actually go. Wall-clock figures are <em>order-of-magnitude</em> for a single
+     modern workstation (multi-core CPU, one GPU), not measured benchmarks — treat them as planning estimates.</p>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Stage</th><th>Bottleneck</th><th>Memory driver</th><th>GPU helps?</th><th>Rough time / subject</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="chip enc" data-ref="decoding/train_EM.py">train_EM.py</span><br><span class="pill p-heavy">heaviest</span></td>
+          <td class="desc">SVD inside <code>bootstrap_ridge</code> (51 SVDs of a 27k×3072 matrix) + the 82-iteration leave-one-out noise model</td>
+          <td class="desc">The <span class="hl">response matrix</span> 27k×81k float32 ≈ <span class="mono">8.9&nbsp;GB</span>; weights ≈ 1&nbsp;GB; bootstrap-corr array ≈ 1.6&nbsp;GB; noise model 10k×10k ≈ 0.8&nbsp;GB</td>
+          <td class="desc">Partly — GPT feature extraction yes; the ridge SVDs are CPU/NumPy</td>
+          <td><span class="mono">~30&nbsp;min – 2&nbsp;hr</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip gpt" data-ref="decoding/train_WR.py">train_WR.py</span><br><span class="pill p-light">light</span></td>
+          <td class="desc">Same ridge engine but only 498 + 1,431 ROI voxels</td>
+          <td class="desc">Small — a few hundred MB</td>
+          <td class="desc">Minimal (no GPT pass)</td>
+          <td><span class="mono">~1 – 5&nbsp;min</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip dec" data-ref="decoding/run_decoder.py">run_decoder.py</span><br><span class="pill p-gpu">GPU-bound</span></td>
+          <td class="desc"><span class="hl">Sequential</span> beam search: per word time, several GPT forward passes over up to 200 contexts × candidate extensions. Cannot be batched across time.</td>
+          <td class="desc">Modest — GPT (~0.4&nbsp;GB) + weights + test resp. The cost is <em>time</em>, not RAM.</td>
+          <td class="desc"><span class="hl">Strongly</span> — GPT calls dominate; CPU decoding is slow</td>
+          <td><span class="mono">~few min/story (GPU)<br>much longer on CPU</span></td>
+        </tr>
+        <tr>
+          <td><span class="chip eval" data-ref="decoding/evaluate_predictions.py">evaluate_predictions.py</span><br><span class="pill p-mod">moderate</span></td>
+          <td class="desc">BERTScore loads a transformer; plus 10 null-sequence generations (GPT sampling)</td>
+          <td class="desc">BERT model + idf tables; modest</td>
+          <td class="desc">Yes for BERTScore + null generation</td>
+          <td><span class="mono">~1 – 10&nbsp;min</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid g2">
+    <div class="callout warn">
+      <div class="h">Practical gotchas before you run</div>
+      <p>① <span class="hl">RAM is the real limit for <code>train_EM.py</code></span> — the 8.9&nbsp;GB response matrix plus SVD
+      intermediates wants ~16–32&nbsp;GB free.</p>
+      <p>② <span class="chip data" data-ref="decoding/utils_ridge/ridge.py:34">ridge.py</span> has a stale
+      <code>from text.regression…</code> fallback import that only triggers if NumPy's SVD fails — harmless unless you hit it.</p>
+      <p>③ Decoding time scales with <span class="hl">story length × beam width (200) × nucleus size</span>; shrink
+      <code>WIDTH</code> in <span class="chip cfg" data-ref="decoding/config.py:29">config.py:29</span> to iterate faster while learning.</p>
+    </div>
+    <div class="callout">
+      <div class="h">Knobs that change cost (all in config.py)</div>
+      <p><span class="chip cfg" data-ref="decoding/config.py:20">NBOOTS=50</span> · bootstrap count → linear on encoding-fit time.</p>
+      <p><span class="chip cfg" data-ref="decoding/config.py:21">VOXELS=10000</span> · kept voxels → noise-model size (²) &amp; decode scoring.</p>
+      <p><span class="chip cfg" data-ref="decoding/config.py:29">WIDTH=200</span> · beam width → decode time &amp; quality.</p>
+      <p><span class="chip cfg" data-ref="decoding/config.py:23">GPT_LAYER=9</span>, <span class="chip cfg" data-ref="decoding/config.py:17">STIM_DELAYS</span> · set the 3,072 feature dim.</p>
+      <p>Your <span class="chip cfg" data-ref="decoding/config.py:43">_best_device()</span> already auto-picks cuda / mps / cpu.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="h">Smallest possible first run (to verify the plumbing)</div>
+    <p>Train on a handful of sessions with <code class="mono">--sessions 2 3</code>, drop <code>NBOOTS</code> to ~5 and
+    <code>VOXELS</code> to ~1000, then decode one short task with <code>WIDTH≈20</code>. The numbers will be poor but every
+    file in the pipeline will execute, which is what you want while learning the codebase.</p>
+  </div>
+</section>
+
+</main>
+
+<div class="copied" id="copied">copied</div>
+<footer>Generated as a navigation aid for the semantic-decoding repo · line numbers verified against source · estimates are planning-grade, not benchmarks</footer>
+
+<script>
+  // tabs
+  const tabs=document.querySelectorAll('nav button'), panes=document.querySelectorAll('.tab');
+  tabs.forEach(b=>b.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('active')); panes.forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); document.getElementById(b.dataset.tab).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  // copy file refs
+  const toast=document.getElementById('copied');
+  document.querySelectorAll('.chip[data-ref]').forEach(c=>{
+    c.title='click to copy '+c.dataset.ref;
+    c.addEventListener('click',()=>{
+      const t=c.dataset.ref;
+      navigator.clipboard&&navigator.clipboard.writeText(t);
+      toast.textContent=t+'  ✓'; toast.classList.add('show');
+      clearTimeout(window._tt); window._tt=setTimeout(()=>toast.classList.remove('show'),1200);
+    });
+  });
+</script>
+</body>
+</html>
