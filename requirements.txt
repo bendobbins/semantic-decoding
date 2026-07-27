@@ -18,3 +18,8 @@ bert-score==0.3.13
 evaluate==0.4.6
 jiwer==4.0.0
 nltk==3.9.4
+
+# data augmentation (decoding/make_augmented_stories.py, utils_augment.py)
+#   nltk (above) also needs: python -c "import nltk; nltk.download(['wordnet','omw-1.4','averaged_perceptron_tagger_eng'])"
+#   anthropic is only required for the LLM substitution engine (needs ANTHROPIC_API_KEY)
+anthropic

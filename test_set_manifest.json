@@ -1,0 +1,365 @@
+{
+  "note": "Test set is defined by the PRE-TRAINED encoder: a story is testable only if it is NOT in encoding_model['stories'].",
+  "encoder_n_stories": 82,
+  "encoder_stories": [
+    "adollshouse",
+    "adventuresinsayingyes",
+    "afatherscover",
+    "againstthewind",
+    "alternateithicatom",
+    "avatar",
+    "backsideofthestorm",
+    "becomingindian",
+    "beneaththemushroomcloud",
+    "birthofanation",
+    "bluehope",
+    "breakingupintheageofgoogle",
+    "buck",
+    "catfishingstrangerstofindmyself",
+    "cautioneating",
+    "christmas1940",
+    "cocoonoflove",
+    "comingofageondeathrow",
+    "exorcism",
+    "eyespy",
+    "firetestforlove",
+    "food",
+    "forgettingfear",
+    "gangstersandcookies",
+    "goingthelibertyway",
+    "goldiethegoldfish",
+    "golfclubbing",
+    "gpsformylostidentity",
+    "hangtime",
+    "haveyoumethimyet",
+    "howtodraw",
+    "ifthishaircouldtalk",
+    "inamoment",
+    "itsabox",
+    "jugglingandjesus",
+    "kiksuya",
+    "leavingbaghdad",
+    "legacy",
+    "life",
+    "lifeanddeathontheoregontrail",
+    "lifereimagined",
+    "listo",
+    "mayorofthefreaks",
+    "metsmagic",
+    "mybackseatviewofagreatromance",
+    "myfathershands",
+    "myfirstdaywiththeyankees",
+    "naked",
+    "notontheusualtour",
+    "odetostepfather",
+    "onlyonewaytofindout",
+    "penpal",
+    "quietfire",
+    "reachingoutbetweenthebars",
+    "shoppinginchina",
+    "singlewomanseekingmanwich",
+    "sloth",
+    "souls",
+    "stagefright",
+    "stumblinginthedark",
+    "superheroesjustforeachother",
+    "sweetaspie",
+    "swimmingwithastronauts",
+    "thatthingonmyarm",
+    "theadvancedbeginner",
+    "theclosetthatateeverything",
+    "thecurse",
+    "thefreedomridersandme",
+    "theinterview",
+    "thepostmanalwayscalls",
+    "theshower",
+    "thetiniestbouquet",
+    "thetriangleshirtwaistconnection",
+    "threemonths",
+    "thumbsup",
+    "tildeath",
+    "treasureisland",
+    "undertheinfluence",
+    "vixenandtheussr",
+    "waitingtogo",
+    "whenmothersbullyback",
+    "wildwomenanddancingqueens"
+  ],
+  "testable_stories_present": [
+    "wheretheressmoke"
+  ],
+  "test_layout": "data_test/test_response/<subject>/perceived_speech/<task>.hf5",
+  "run_decoder_example": "python3 decoding/run_decoder.py --subject S1 --experiment perceived_speech --task wheretheressmoke",
+  "response_moves": [
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/shoppinginchina.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/shoppinginchina.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/thepostmanalwayscalls.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/thepostmanalwayscalls.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/ifthishaircouldtalk.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/ifthishaircouldtalk.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/comingofageondeathrow.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/comingofageondeathrow.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/wildwomenanddancingqueens.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/wildwomenanddancingqueens.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/breakingupintheageofgoogle.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/breakingupintheageofgoogle.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/waitingtogo.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/waitingtogo.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/catfishingstrangerstofindmyself.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/catfishingstrangerstofindmyself.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/hangtime.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/hangtime.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/wheretheressmoke.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/perceived_speech/wheretheressmoke.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/cautioneating.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/cautioneating.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/thetriangleshirtwaistconnection.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/thetriangleshirtwaistconnection.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/kiksuya.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/kiksuya.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/alternateithicatom.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/alternateithicatom.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/gpsformylostidentity.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/gpsformylostidentity.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/haveyoumethimyet.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/haveyoumethimyet.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S1/perceived_speech/againstthewind.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S1/againstthewind.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/shoppinginchina.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/shoppinginchina.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/thepostmanalwayscalls.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/thepostmanalwayscalls.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/ifthishaircouldtalk.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/ifthishaircouldtalk.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/comingofageondeathrow.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/comingofageondeathrow.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/wildwomenanddancingqueens.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/wildwomenanddancingqueens.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/breakingupintheageofgoogle.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/breakingupintheageofgoogle.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/waitingtogo.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/waitingtogo.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/catfishingstrangerstofindmyself.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/catfishingstrangerstofindmyself.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/hangtime.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/hangtime.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/wheretheressmoke.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/perceived_speech/wheretheressmoke.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/cautioneating.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/cautioneating.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/againstthewind.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/againstthewind.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/thetriangleshirtwaistconnection.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/thetriangleshirtwaistconnection.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/kiksuya.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/kiksuya.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/alternateithicatom.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/alternateithicatom.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/gpsformylostidentity.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/gpsformylostidentity.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S2/haveyoumethimyet.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S2/haveyoumethimyet.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/shoppinginchina.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/shoppinginchina.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/thepostmanalwayscalls.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/thepostmanalwayscalls.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/ifthishaircouldtalk.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/ifthishaircouldtalk.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/comingofageondeathrow.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/comingofageondeathrow.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/wildwomenanddancingqueens.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/wildwomenanddancingqueens.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/breakingupintheageofgoogle.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/breakingupintheageofgoogle.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/waitingtogo.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/waitingtogo.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/catfishingstrangerstofindmyself.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/catfishingstrangerstofindmyself.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/hangtime.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/hangtime.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/wheretheressmoke.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/perceived_speech/wheretheressmoke.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/cautioneating.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/cautioneating.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/againstthewind.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/againstthewind.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/thetriangleshirtwaistconnection.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/thetriangleshirtwaistconnection.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/kiksuya.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/kiksuya.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/alternateithicatom.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/alternateithicatom.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/gpsformylostidentity.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/gpsformylostidentity.hf5"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_response/S3/haveyoumethimyet.hf5",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_response/S3/haveyoumethimyet.hf5"
+    }
+  ],
+  "stimulus_moves": [
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/kiksuya.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/kiksuya.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/alternateithicatom.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/alternateithicatom.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/hangtime.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/hangtime.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/gpsformylostidentity.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/gpsformylostidentity.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/cautioneating.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/cautioneating.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/breakingupintheageofgoogle.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/breakingupintheageofgoogle.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/shoppinginchina.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/shoppinginchina.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/catfishingstrangerstofindmyself.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/catfishingstrangerstofindmyself.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/ifthishaircouldtalk.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/ifthishaircouldtalk.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/waitingtogo.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/waitingtogo.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/comingofageondeathrow.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/comingofageondeathrow.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/thepostmanalwayscalls.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/thepostmanalwayscalls.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/haveyoumethimyet.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/haveyoumethimyet.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/againstthewind.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/againstthewind.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/wildwomenanddancingqueens.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/wildwomenanddancingqueens.TextGrid"
+    },
+    {
+      "from": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_test/test_stimulus/thetriangleshirtwaistconnection.TextGrid",
+      "to": "/sessions/clever-brave-cerf/mnt/semantic-decoding/data_train/train_stimulus/thetriangleshirtwaistconnection.TextGrid"
+    }
+  ]
+}
