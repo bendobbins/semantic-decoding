@@ -1,0 +1,13 @@
+__pycache__/
+
+# Models
+*-dataset-models/
+models/
+
+# Results
+results/
+scores/
+figures/
+
+# Data
+data/

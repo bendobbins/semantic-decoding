@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--gpt", type = str, default = "perceived")
     parser.add_argument("--sessions", nargs = "+", type = int, 
         default = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 18, 20])
+    parser.add_argument("--model_dir", type = lambda p: os.path.join(config.REPO_DIR, p), default = "models")
     args = parser.parse_args()
 
     # training stories
@@ -56,7 +57,8 @@ if __name__ == "__main__":
     del stim_dict, resp_dict
     
     # save
-    save_location = os.path.join(config.MODEL_DIR, args.subject)
+    # save_location = os.path.join(config.MODEL_DIR, args.subject)
+    save_location = os.path.join(args.model_dir, args.subject)
     os.makedirs(save_location, exist_ok = True)
     np.savez(os.path.join(save_location, "encoding_model_%s" % args.gpt), 
         weights = weights, noise_model = noise_model, alphas = alphas, voxels = vox, stories = stories,

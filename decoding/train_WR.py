@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--subject", type = str, required = True)
     parser.add_argument("--sessions", nargs = "+", type = int, 
         default = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 18, 20])
+    parser.add_argument("--model_dir", type = str, default = "models")
     args = parser.parse_args()
 
     # training stories
@@ -26,11 +27,12 @@ if __name__ == "__main__":
         stories.extend(sess_to_story[str(sess)])
 
     # ROI voxels
-    with open(os.path.join(config.DATA_TRAIN_DIR, "ROIs", "%s.json" % args.subject), "r") as f:
+    roi_subject = args.subject.split("_")[0]
+    with open(os.path.join(config.DATA_TRAIN_DIR, "ROIs", "%s.json" % roi_subject), "r") as f:
         vox = json.load(f)
             
     # estimate word rate model
-    save_location = os.path.join(config.MODEL_DIR, args.subject)
+    save_location = os.path.join(config.REPO_DIR, args.model_dir, args.subject)
     os.makedirs(save_location, exist_ok = True)
     
     wordseqs = get_story_wordseqs(stories)

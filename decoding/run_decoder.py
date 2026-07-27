@@ -18,6 +18,7 @@ if __name__ == "__main__":
     parser.add_argument("--subject", type = str, required = True)
     parser.add_argument("--experiment", type = str, required = True)
     parser.add_argument("--task", type = str, required = True)
+    parser.add_argument("--model_dir", type = str, default = "models")
     args = parser.parse_args()
     
     # determine GPT checkpoint based on experiment
@@ -29,7 +30,8 @@ if __name__ == "__main__":
     else: word_rate_voxels = "auditory"
 
     # load responses
-    hf = h5py.File(os.path.join(config.DATA_TEST_DIR, "test_response", args.subject, args.experiment, args.task + ".hf5"), "r")
+    subject = args.subject.split("_")[0]
+    hf = h5py.File(os.path.join(config.DATA_TEST_DIR, "test_response", subject, args.experiment, args.task + ".hf5"), "r")
     resp = np.nan_to_num(hf["data"][:])
     hf.close()
     
@@ -43,7 +45,8 @@ if __name__ == "__main__":
     lm = LanguageModel(gpt, decoder_vocab, nuc_mass = config.LM_MASS, nuc_ratio = config.LM_RATIO)
 
     # load models
-    load_location = os.path.join(config.MODEL_DIR, args.subject)
+    # load_location = os.path.join(config.MODEL_DIR, args.subject)
+    load_location = os.path.join(config.REPO_DIR, args.model_dir, args.subject)
     word_rate_model = np.load(os.path.join(load_location, "word_rate_model_%s.npz" % word_rate_voxels), allow_pickle = True)
     encoding_model = np.load(os.path.join(load_location, "encoding_model_%s.npz" % gpt_checkpoint))
     weights = encoding_model["weights"]
@@ -79,6 +82,6 @@ if __name__ == "__main__":
         decoder.extend(verbose = False)
         
     if args.experiment in ["perceived_movie", "perceived_multispeaker"]: decoder.word_times += 10
-    save_location = os.path.join(config.RESULT_DIR, args.subject, args.experiment)
+    save_location = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment)
     os.makedirs(save_location, exist_ok = True)
     decoder.save(os.path.join(save_location, args.task))

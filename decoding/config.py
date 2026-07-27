@@ -4,7 +4,7 @@ import numpy as np
 # paths
 
 REPO_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_DIR = os.path.join(os.path.dirname(REPO_DIR), "data")
+DATA_DIR = os.path.join(REPO_DIR, "data")
 DATA_LM_DIR = os.path.join(DATA_DIR, "data_lm")
 DATA_TRAIN_DIR = os.path.join(DATA_DIR, "data_train")
 DATA_TEST_DIR = os.path.join(DATA_DIR, "data_test")
