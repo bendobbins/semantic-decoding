@@ -361,34 +361,110 @@ def build_variant(records, slots, engines, rng_by_engine, matched=True):
 _ITEM_RE = re.compile(r"\s*item \[\d+\]:")
 _TEXT_RE = re.compile(r'(\s*text = ")(.*)("\s*)$')
 
+# The training stimuli are not all in one Praat encoding, and utils_ridge.textgrid
+# reads all three -- so story_word_records succeeds on every story and the writer
+# has to cover the same ground. Across the 82 train_stimulus files:
+#   long ooTextFile  (79) - keyed "item [n]:" blocks with `text = "..."`
+#   short ooTextFile (1: life) - same header, no keys, bare values in fixed order
+#   chronological    (2: legacy, exorcism) - both tiers interleaved in time order,
+#                    each interval a "<tier-no> <xmin> <xmax>" line + quoted label
+_QUOTED_RE = re.compile(r'(\s*")(.*)("\s*)$')
+_CHRON_IVAL_RE = re.compile(r"\s*(\d+)\s+\d+\.?\d*\s+\d+\.?\d*\s*$")
+_CHRON_TIER_RE = re.compile(r'\s*"\w*IntervalTier"\s+"([^"]*)"')
+_SHORT_TIER_RE = re.compile(r'\s*"\w*IntervalTier"\s*$')
 
-def write_augmented_textgrid(base_story, out_path, records, subs_by_gw):
-    """Write an augmented TextGrid: copy of base_story with the word-tier `text`
-    labels replaced at the substituted slots. Interval times and the phone tier
-    are byte-identical, so downstream TR counts are unchanged.
 
-    subs_by_gw maps gw -> new word; it is remapped to raw word-tier interval index.
-    """
-    raw_to_new = {records[gw]["raw_idx"]: new for gw, new in subs_by_gw.items()}
-    src = open(os.path.join(config.DATA_TRAIN_DIR, "train_stimulus",
-                            "%s.TextGrid" % base_story)).read()
-    lines = src.split("\n")
+def _sub_ootextfile_short(lines, raw_to_new, base_story):
+    """Short "ooTextFile" format: after the tier header come name/xmin/xmax/size,
+    then `size` bare (xmin, xmax, text) triples -- so label k is 3 lines apart."""
+    tiers = [i for i, ln in enumerate(lines) if _SHORT_TIER_RE.match(ln)]
+    if len(tiers) < 2:
+        raise ValueError("expected 2 tiers (phone, word) in %s" % base_story)
+    start = tiers[1]  # word tier is the 2nd declared tier, matching tiers[1]
+    try:
+        n_intervals = int(lines[start + 4].strip())
+    except (IndexError, ValueError):
+        raise ValueError("could not read word-tier interval count in %s" % base_story)
 
+    for k in range(n_intervals):
+        if k not in raw_to_new:
+            continue
+        i = start + 5 + 3 * k + 2  # +2 past this interval's xmin/xmax
+        if i >= len(lines):
+            break
+        m = _QUOTED_RE.match(lines[i])
+        if m:
+            lines[i] = "%s%s%s" % (m.group(1), raw_to_new[k].upper(), m.group(3))
+    return lines
+
+
+def _sub_ootextfile(lines, raw_to_new, base_story):
+    """Standard "ooTextFile" long format: word tier is the 2nd item block."""
     item_lines = [i for i, ln in enumerate(lines) if _ITEM_RE.match(ln)]
     if len(item_lines) < 2:
-        raise ValueError("expected 2 tiers (phone, word) in %s" % base_story)
-    word_start = item_lines[1]  # word tier is the 2nd item block
+        raise ValueError("expected 2 item blocks (phone, word) in %s" % base_story)
 
     interval_idx = -1
-    for i in range(word_start, len(lines)):
+    for i in range(item_lines[1], len(lines)):
         m = _TEXT_RE.match(lines[i])
         if not m:
             continue
         interval_idx += 1
         if interval_idx in raw_to_new:
             lines[i] = "%s%s%s" % (m.group(1), raw_to_new[interval_idx].upper(), m.group(3))
+    return lines
 
-    with open(out_path, "w") as f:
+
+def _sub_chronological(lines, raw_to_new, base_story):
+    """Praat chronological format: interleaved intervals keyed by tier number.
+
+    Tier numbers are 1-based in declaration order, and story_word_records reads
+    the word tier as tiers[1], so the 2nd declared tier is the one to rewrite.
+    """
+    decls = [i for i, ln in enumerate(lines) if _CHRON_TIER_RE.match(ln)]
+    if len(decls) < 2:
+        raise ValueError("expected 2 tiers (phone, word) in %s" % base_story)
+    word_tier_no = "2"
+
+    interval_idx = -1
+    for i in range(decls[-1] + 1, len(lines) - 1):
+        m = _CHRON_IVAL_RE.match(lines[i])
+        if not m or m.group(1) != word_tier_no:
+            continue
+        interval_idx += 1
+        if interval_idx not in raw_to_new:
+            continue
+        t = _QUOTED_RE.match(lines[i + 1])
+        if t:
+            lines[i + 1] = "%s%s%s" % (t.group(1), raw_to_new[interval_idx].upper(),
+                                       t.group(3))
+    return lines
+
+
+def write_augmented_textgrid(base_story, out_path, records, subs_by_gw):
+    """Write an augmented TextGrid: copy of base_story with the word-tier labels
+    replaced at the substituted slots. Interval times and the phone tier are
+    byte-identical, so downstream TR counts are unchanged.
+
+    subs_by_gw maps gw -> new word; it is remapped to raw word-tier interval index.
+    """
+    raw_to_new = {records[gw]["raw_idx"]: new for gw, new in subs_by_gw.items()}
+    # newline="" disables universal-newline translation, and split/join on "\n"
+    # alone keeps any "\r" attached to the line, so a CRLF source (legacy is one)
+    # stays CRLF instead of being silently rewritten as LF.
+    with open(os.path.join(config.DATA_TRAIN_DIR, "train_stimulus",
+                           "%s.TextGrid" % base_story), newline="") as f:
+        src = f.read()
+    lines = src.split("\n")
+
+    if "chronological" in lines[0].lower():
+        lines = _sub_chronological(lines, raw_to_new, base_story)
+    elif any(_ITEM_RE.match(ln) for ln in lines):
+        lines = _sub_ootextfile(lines, raw_to_new, base_story)
+    else:
+        lines = _sub_ootextfile_short(lines, raw_to_new, base_story)
+
+    with open(out_path, "w", newline="") as f:
         f.write("\n".join(lines))
 
 
