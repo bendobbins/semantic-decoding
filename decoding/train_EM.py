@@ -48,14 +48,30 @@ if __name__ == "__main__":
     
     # estimate encoding model (weights fit on originals + augmentations)
     rstim, tr_stats, word_stats = get_stim(train_stories, features)
-    rresp = get_resp(args.subject, train_stories, stack = True)
-    nchunks = int(np.ceil(rresp.shape[0] / 5 / config.CHUNKLEN))
-    weights, alphas, bscorrs = bootstrap_ridge(rstim, rresp, use_corr = False, alphas = config.ALPHAS,
-        nboots = config.NBOOTS, chunklen = config.CHUNKLEN, nchunks = nchunks)        
+
+    # select alphas + voxels on originals only. An augmented story reuses its base
+    # story's responses verbatim, so a bootstrap chunk held out from an augmented
+    # story can have its identical twin sitting in the training half -- which
+    # inflates the held-out correlations that pick the alphas and rank the voxels.
+    # Without --augment this is the full training set, so the no-aug path is
+    # unchanged (bootstrap_ridge's own final fit is exactly ridge() at valphas).
+    sel_stim = get_stim(orig_stories, features, tr_stats = tr_stats) if aug_stories else rstim
+    sel_resp = get_resp(args.subject, orig_stories, stack = True)
+    nchunks = int(np.ceil(sel_resp.shape[0] / 5 / config.CHUNKLEN))
+    _, alphas, bscorrs = bootstrap_ridge(sel_stim, sel_resp, use_corr = False, alphas = config.ALPHAS,
+        nboots = config.NBOOTS, chunklen = config.CHUNKLEN, nchunks = nchunks)
     bscorrs = bscorrs.mean(2).max(0)
     vox = np.sort(np.argsort(bscorrs)[-config.VOXELS:])
+
+    # fit the weights on originals + augmentations at those fixed alphas
+    if aug_stories:
+        del sel_stim, sel_resp                       # free before the larger load
+        rresp = get_resp(args.subject, train_stories, stack = True)
+    else:
+        rresp = sel_resp
+    weights = ridge(rstim, rresp, alphas)
     del rstim, rresp
-    
+
     # estimate noise model (originals only: augmented twins would contaminate leave-one-story-out)
     stim_dict = {story : get_stim([story], features, tr_stats = tr_stats) for story in orig_stories}
     resp_dict = get_resp(args.subject, orig_stories, stack = False, vox = vox)
