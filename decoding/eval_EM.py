@@ -60,6 +60,10 @@ if __name__ == "__main__":
     parser.add_argument("--experiment", type=str, default="perceived_speech")
     parser.add_argument("--task", type=str, default="wheretheressmoke")
     parser.add_argument("--gpt", type=str, default="perceived")
+    parser.add_argument("--model_dir", type=str, default="models",
+                        help="dataset-level model dir, e.g. 2hr-dataset-models")
+    parser.add_argument("--aug_tag", type=str, default=None,
+                        help="augmentation run tag; appended as <model_dir>/<condition>/<aug_tag>")
     parser.add_argument("--topk", type=int, default=1000,
                         help="report the mean over each model's top-k best-predicted voxels")
     args = parser.parse_args()
@@ -75,9 +79,14 @@ if __name__ == "__main__":
     print("%-24s  %8s  %8s  %8s" % ("condition", "mean", "top%d" % args.topk, "median"))
     print("-" * 54)
     for cond in args.conditions:
-        resp_path = os.path.join(config.DATA_TEST_DIR, "test_response", cond,
+        # augmented conditions have no test responses of their own; like run_decoder.py
+        # they are evaluated on the base subject's clean test data
+        base_subject = os.path.basename(cond).split("_")[0]
+        resp_path = os.path.join(config.DATA_TEST_DIR, "test_response", base_subject,
                                  args.experiment, args.task + ".hf5")
-        model_path = os.path.join(config.MODEL_DIR, cond, "encoding_model_%s.npz" % args.gpt)
+        rel_cond = os.path.join(cond, args.aug_tag) if args.aug_tag else cond
+        model_path = os.path.join(config.REPO_DIR, args.model_dir, rel_cond,
+                                  "encoding_model_%s.npz" % args.gpt)
         if not (os.path.exists(resp_path) and os.path.exists(model_path)):
             print("%-24s  (missing response or model)" % cond)
             continue

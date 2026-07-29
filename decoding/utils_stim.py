@@ -8,20 +8,28 @@ from utils_ridge.dsutils import make_word_ds
 from utils_ridge.interpdata import lanczosinterp2D
 from utils_ridge.util import make_delayed
 
-def get_story_wordseqs(stories):
+def get_story_wordseqs(stories, aug_stim_dirs = (), respdict_extra = None):
     """loads words and word times of stimulus stories
+
+    [aug_stim_dirs] are extra TextGrid directories searched after train_stimulus, and
+    [respdict_extra] holds TR counts for stories not in the shared respdict.json. Both
+    let an augmentation run supply its own stories without writing into the base data.
     """
-    grids = load_textgrids(stories, config.DATA_TRAIN_DIR)
+    grids = load_textgrids(stories, config.DATA_TRAIN_DIR, extra_dirs = aug_stim_dirs)
     with open(os.path.join(config.DATA_TRAIN_DIR, "respdict.json"), "r") as f:
         respdict = json.load(f)
+    if respdict_extra:
+        respdict = dict(respdict)
+        respdict.update(respdict_extra)
     trfiles = load_simulated_trfiles(respdict)
     wordseqs = make_word_ds(grids, trfiles)
     return wordseqs
 
-def get_stim(stories, features, tr_stats = None):
+def get_stim(stories, features, tr_stats = None, aug_stim_dirs = (), respdict_extra = None):
     """extract quantitative features of stimulus stories
     """
-    word_seqs = get_story_wordseqs(stories)
+    word_seqs = get_story_wordseqs(stories, aug_stim_dirs = aug_stim_dirs,
+                                   respdict_extra = respdict_extra)
     word_vecs = {story : features.make_stim(word_seqs[story].data) for story in stories}
     word_mat = np.vstack([word_vecs[story] for story in stories])
     word_mean, word_std = word_mat.mean(0), word_mat.std(0)

@@ -255,8 +255,26 @@ class LLMEngine(SubstitutionEngine):
         return hashlib.sha1(("%s||%s" % (word, context)).encode()).hexdigest()
 
     def _flush(self):
-        with open(self.cache_path, "w") as f:
-            json.dump(self.cache, f)
+        """Merge-then-replace, so parallel runs sharing this cache cannot corrupt it.
+
+        Re-reading first means a concurrent writer's entries survive; writing to a temp
+        file in the same directory and os.replace()ing makes the swap atomic, so a
+        reader never sees a half-written file. A simultaneous write can still lose an
+        entry, which costs at most one redundant API call.
+        """
+        merged = {}
+        if os.path.exists(self.cache_path):
+            try:
+                with open(self.cache_path) as f:
+                    merged = json.load(f)
+            except (ValueError, OSError):
+                merged = {}          # unreadable/corrupt from an older run: rebuild
+        merged.update(self.cache)
+        self.cache = merged
+        tmp = "%s.tmp.%d" % (self.cache_path, os.getpid())
+        with open(tmp, "w") as f:
+            json.dump(merged, f)
+        os.replace(tmp, self.cache_path)
         self._dirty = 0
 
     def _valid(self, cand, word):

@@ -4,10 +4,15 @@ import h5py
 
 import config
 
-def get_resp(subject, stories, stack = True, vox = None):
+def get_resp(subject, stories, stack = True, vox = None, resp_root = None):
     """loads response data
+
+    [resp_root] overrides the directory that holds per-subject response dirs; an
+    augmentation run points it at its own train_response/aug/... tree.
     """
-    subject_dir = os.path.join(config.DATA_TRAIN_DIR, "train_response", subject)
+    if resp_root is None:
+        resp_root = os.path.join(config.DATA_TRAIN_DIR, "train_response")
+    subject_dir = os.path.join(resp_root, subject)
     resp = {}
     for story in stories:
         resp_path = os.path.join(subject_dir, "%s.hf5" % story)

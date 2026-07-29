@@ -4,12 +4,25 @@ from os.path import join, dirname
 
 from utils_ridge.textgrid import TextGrid
 
-def load_textgrids(stories, data_dir: str):
-    base = join(data_dir, "train_stimulus")
+def load_textgrids(stories, data_dir: str, extra_dirs=()):
+    """Load story TextGrids.
+
+    [extra_dirs] are searched after the base train_stimulus directory, which is how
+    augmented stories are picked up from their own per-run directory without ever
+    being written into the shared stimulus tree.
+    """
+    bases = [join(data_dir, "train_stimulus")] + [str(d) for d in extra_dirs]
     grids = {}
     for story in stories:
-        grid_path = os.path.join(base, "%s.TextGrid" % story)
-        grids[story] = TextGrid(open(grid_path).read())
+        for base in bases:
+            grid_path = os.path.join(base, "%s.TextGrid" % story)
+            if os.path.exists(grid_path):
+                grids[story] = TextGrid(open(grid_path).read())
+                break
+        else:
+            raise FileNotFoundError(
+                "no TextGrid for story %r; searched:\n  %s"
+                % (story, "\n  ".join(os.path.join(b, "%s.TextGrid" % story) for b in bases)))
     return grids
 
 class TRFile(object):

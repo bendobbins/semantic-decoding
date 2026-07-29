@@ -19,7 +19,15 @@ if __name__ == "__main__":
     parser.add_argument("--experiment", type = str, required = True)
     parser.add_argument("--task", type = str, required = True)
     parser.add_argument("--model_dir", type = str, default = "models")
+    parser.add_argument("--aug_tag", type = str, default = None,
+        help = "augmentation run tag, e.g. 3var-0.2swap-0seed; appended to the model load "
+               "and result save paths as <model_dir>/<subject>/<aug_tag>")
+    parser.add_argument("--word_rate_dir", type = str, default = None,
+        help = "repo-relative dir holding word_rate_model_*.npz. Only needed to override "
+               "the lookup: the model dir is used if it has one, otherwise the path the "
+               "encoding model recorded at training time")
     args = parser.parse_args()
+    rel_subject = os.path.join(args.subject, args.aug_tag) if args.aug_tag else args.subject
     
     # determine GPT checkpoint based on experiment
     if args.experiment in ["imagined_speech"]: gpt_checkpoint = "imagined"
@@ -29,8 +37,8 @@ if __name__ == "__main__":
     if args.experiment in ["imagined_speech", "perceived_movies"]: word_rate_voxels = "speech"
     else: word_rate_voxels = "auditory"
 
-    # load responses
-    subject = args.subject.split("_")[0]
+    # load responses (augmented conditions decode on the base subject's clean test data)
+    subject = os.path.basename(args.subject).split("_")[0]
     hf = h5py.File(os.path.join(config.DATA_TEST_DIR, "test_response", subject, args.experiment, args.task + ".hf5"), "r")
     resp = np.nan_to_num(hf["data"][:])
     hf.close()
@@ -46,9 +54,24 @@ if __name__ == "__main__":
 
     # load models
     # load_location = os.path.join(config.MODEL_DIR, args.subject)
-    load_location = os.path.join(config.REPO_DIR, args.model_dir, args.subject)
-    word_rate_model = np.load(os.path.join(load_location, "word_rate_model_%s.npz" % word_rate_voxels), allow_pickle = True)
+    load_location = os.path.join(config.REPO_DIR, args.model_dir, rel_subject)
     encoding_model = np.load(os.path.join(load_location, "encoding_model_%s.npz" % gpt_checkpoint))
+
+    # word rate is stimulus-agnostic, so an augmented condition has no model of its own and
+    # reuses the one trained for the base subject. Prefer a local file (every non-augmented
+    # run has one), then an explicit override, then the path recorded at training time.
+    wr_name = "word_rate_model_%s.npz" % word_rate_voxels
+    wr_candidates = [os.path.join(load_location, wr_name)]
+    if args.word_rate_dir:
+        wr_candidates.append(os.path.join(config.REPO_DIR, args.word_rate_dir, wr_name))
+    if "word_rate_dir" in encoding_model.files:
+        recorded = str(encoding_model["word_rate_dir"])
+        if recorded:
+            wr_candidates.append(os.path.join(config.REPO_DIR, recorded, wr_name))
+    wr_path = next((p for p in wr_candidates if os.path.exists(p)), None)
+    if wr_path is None:
+        raise SystemExit("no %s found; searched:\n  %s" % (wr_name, "\n  ".join(wr_candidates)))
+    word_rate_model = np.load(wr_path, allow_pickle = True)
     weights = encoding_model["weights"]
     noise_model = encoding_model["noise_model"]
     tr_stats = encoding_model["tr_stats"]
@@ -82,6 +105,6 @@ if __name__ == "__main__":
         decoder.extend(verbose = False)
         
     if args.experiment in ["perceived_movie", "perceived_multispeaker"]: decoder.word_times += 10
-    save_location = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment)
+    save_location = os.path.join(config.RESULT_DIR, args.model_dir, rel_subject, args.experiment)
     os.makedirs(save_location, exist_ok = True)
     decoder.save(os.path.join(save_location, args.task))
