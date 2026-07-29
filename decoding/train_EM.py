@@ -21,6 +21,14 @@ def load_aug_manifest(path, subject, sessions, aug_tag):
     command line is checked against it and a mismatch aborts, so a run can never be
     silently wired to another run's data.
     """
+    # accept the path either as given or relative to the repo root, so the command
+    # make_augmented_stories.py prints works from the repo root and from decoding/
+    if not os.path.exists(path):
+        from_repo = os.path.join(config.REPO_DIR, path)
+        if os.path.exists(from_repo):
+            path = from_repo
+        else:
+            raise SystemExit("no such manifest: %s (also tried %s)" % (path, from_repo))
     with open(path, "r") as f:
         man = json.load(f)
 
