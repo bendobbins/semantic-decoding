@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 import json
 import argparse
@@ -10,6 +11,10 @@ from utils_stim import get_stim
 from utils_resp import get_resp
 from utils_ridge.ridge import ridge, bootstrap_ridge
 np.random.seed(42)
+# bootstrap_ridge draws its held-out chunks with stdlib random.shuffle, which
+# np.random.seed does not control -- without this, alpha and voxel selection differ
+# between otherwise identical runs
+random.seed(42)
 
 
 def load_aug_manifest(path, subject, sessions, aug_tag):
