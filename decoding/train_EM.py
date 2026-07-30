@@ -92,6 +92,13 @@ if __name__ == "__main__":
                "augmented copies of any listed base story that is in the session set. Fits "
                "the encoding weights on originals + augmentations, but selects alphas/voxels "
                "and estimates the noise model on originals only.")
+    parser.add_argument("--alpha_rescale", choices = ["none", "sqrt_k"], default = "none",
+        help = "how to carry the alphas selected on originals over to the augmented fit. "
+               "ridge minimises ||Xw-y||^2 + alpha^2||w||^2, so stacking k copies of the "
+               "data grows the error term k-fold and weakens the effective shrinkage by "
+               "sqrt(k). 'sqrt_k' multiplies the selected alphas by sqrt(k) to restore it; "
+               "'none' (default, and what earlier runs used) leaves them as selected, which "
+               "under-regularises the augmented fit. No effect without --augment.")
     args = parser.parse_args()
 
     # training stories
@@ -141,13 +148,19 @@ if __name__ == "__main__":
     bscorrs = bscorrs.mean(2).max(0)
     vox = np.sort(np.argsort(bscorrs)[-config.VOXELS:])
 
-    # fit the weights on originals + augmentations at those fixed alphas
+    # fit the weights on originals + augmentations at those fixed alphas.
+    # k is the effective number of stacked copies, taken from the row counts rather than
+    # the variant count so a variant that produced no substitutions cannot skew it.
+    k = rstim.shape[0] / sel_resp.shape[0]
+    alpha_factor = np.sqrt(k) if (aug_stories and args.alpha_rescale == "sqrt_k") else 1.0
     if aug_stories:
+        print("augmented fit: %d rows vs %d originals (k=%.2f), alpha_rescale=%s -> x%.3f"
+              % (rstim.shape[0], sel_resp.shape[0], k, args.alpha_rescale, alpha_factor))
         del sel_stim, sel_resp                       # free before the larger load
         rresp = get_resp(args.subject, train_stories, stack = True, resp_root = resp_root)
     else:
         rresp = sel_resp
-    weights = ridge(rstim, rresp, alphas)
+    weights = ridge(rstim, rresp, alphas * alpha_factor)
     del rstim, rresp
 
     # estimate noise model (originals only: augmented twins would contaminate leave-one-story-out)
@@ -175,5 +188,8 @@ if __name__ == "__main__":
         # existing model; run_decoder.py reads this when the model dir has no local copy
         word_rate_dir = word_rate_dir, aug_tag = aug_tag or "",
         aug_manifest = args.augment or "", sessions = args.sessions,
+        # `alphas` are as selected on the originals; the weight fit used alphas*alpha_factor
+        # (the noise model deliberately keeps the unscaled values, being an originals-only fit)
+        alpha_rescale = args.alpha_rescale, alpha_factor = alpha_factor,
         tr_stats = np.array(tr_stats), word_stats = np.array(word_stats))
     print("saved -> %s" % os.path.relpath(save_location, config.REPO_DIR))
