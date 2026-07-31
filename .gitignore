@@ -12,3 +12,6 @@ figures/
 
 # Data
 data/
+
+# Files
+plot_aug_comparison.py
