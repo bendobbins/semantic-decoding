@@ -9,6 +9,10 @@ models/
 # Results
 results/
 figures/
+!scores/*-dataset-models/
 
 # Data
 data/
+
+# Files
+plot_aug_comparison.py
