@@ -6,6 +6,7 @@ decoding/__pycache__/
 models/
 
 # Results
+!scores/*-dataset-models/
 results/
 figures/
 
