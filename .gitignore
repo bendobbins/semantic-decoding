@@ -3,11 +3,11 @@ decoding/__pycache__/
 
 # Models
 *-dataset-models/
+2hr-alpharescale-test/
 models/
 
 # Results
 results/
-scores/
 figures/
 
 # Data
