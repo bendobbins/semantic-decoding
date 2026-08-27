@@ -3,6 +3,7 @@ decoding/__pycache__/
 
 # Models
 *-dataset-models/
+*-alpharescale-models/
 2hr-alpharescale-test/
 models/
 
@@ -11,6 +12,7 @@ results/
 figures/
 !scores/*-dataset-models/
 !scores/2hr-alpharescale-test/
+!scores/*-alpharescale-models/
 
 # Data
 data/
