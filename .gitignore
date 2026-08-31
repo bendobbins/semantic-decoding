@@ -12,6 +12,8 @@ figures/
 
 # Data
 data/
+SE_Processed/
+whisper_weights/
 
 # Files
 plot_aug_comparison.py
