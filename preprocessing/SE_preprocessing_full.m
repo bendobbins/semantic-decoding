@@ -51,7 +51,7 @@ cfg.crop_end_bleed = 1; % second after max(trial end, voice offset)
 % end
 
 % Whether to inspect all_data before filtering frequency bands and saving to file
-cfg.flags.inspectBeforeSaving = true;
+cfg.flags.inspectBeforeSaving = false;
 % Whether to normalize (to whole session mean/sd) signal before saving
 cfg.flags.normalizeBeforeSaving = true;
 % Save baseline statistics as well

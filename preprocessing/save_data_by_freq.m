@@ -46,7 +46,6 @@ function save_path = save_data_by_freq(data, cfg)
         % Crop the trial
         trial = smoothed_hg_ECoG(:, :);
         all_data(1,1) = {trial}; % freq band data
-        end
         all_data(trials_outofbounds, :) = [];
         
         % Save

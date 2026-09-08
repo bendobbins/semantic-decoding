@@ -22,6 +22,39 @@ function data = prepare_data(cfg)
         data.car_info =  {};
     end
 
+        % Audio annotations
+    % Search a few known layouts/naming conventions: the labels may live in a
+    % <subj>_Audio subfolder or flat alongside the .mat/.wav files in home_dir.
+    lbl_dir = fullfile(cfg.home_dir, "data/labels");
+    lbl_base = sprintf("%s_%s_%s", cfg.subjname, cfg.task, cfg.expnum);
+    lbl_dirs = [string(lbl_dir), string(cfg.home_dir)];
+    lbl_suffixes = ["_labels.txt", "_in_labels.txt", ".txt", "_in.txt", "_story_words.txt"];
+
+    audio_labels_path = fullfile(lbl_dir, lbl_base + "_labels.txt"); % default, for the message below
+    found_labels = false;
+    for lbl_d = 1:numel(lbl_dirs)
+        for lbl_s = 1:numel(lbl_suffixes)
+            lbl_candidate = fullfile(lbl_dirs(lbl_d), lbl_base + lbl_suffixes(lbl_s));
+            if isfile(lbl_candidate)
+                audio_labels_path = lbl_candidate;
+                found_labels = true;
+                break
+            end
+        end
+        if found_labels
+            break
+        end
+    end
+
+    if found_labels
+        fprintf("Loading audio labels from: %s\n", audio_labels_path);
+        voice_tbl = readtable(audio_labels_path, ...
+            'FileType', 'text', 'Delimiter', '\t', 'ReadVariableNames', false);
+        fprintf("Loaded %d annotations\n", height(voice_tbl));
+    else
+        fprintf("Audio labels file not found. Continuing without voice data\n");
+    end
+
     %% Parse channel names
     try
         names = regexprep(parameters.ChannelNames.Value, '(?<=[Ee][Mm][Gg])\s+(?=\d+-REF)', '');
