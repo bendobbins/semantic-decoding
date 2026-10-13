@@ -1,5 +1,6 @@
 import numpy as np
 import itertools as itools
+import config
 from utils_ridge.interpdata import sincinterp2D, gabor_xfm2D, lanczosinterp2D
 
 class DataSequence(object):
@@ -8,7 +9,7 @@ class DataSequence(object):
     considered both at the level of single words (which are continuous throughout the stimulus)
     and at the level of TRs (which contain discrete chunks of words).
     """
-    def __init__(self, data, split_inds, data_times=None, tr_times=None):
+    def __init__(self, data, split_inds, data_times=None, bin_times=None, data_starts = None):
         """Initializes the DataSequence with the given [data] object (which can be any iterable)
         and a collection of [split_inds], which should be the indices where the data is split into
         separate TR chunks.
@@ -16,7 +17,8 @@ class DataSequence(object):
         self.data = data
         self.split_inds = split_inds
         self.data_times = data_times
-        self.tr_times = tr_times
+        self.bin_times = bin_times
+        self.data_starts = data_starts
 
     def mapdata(self, fun):
         """Creates a new DataSequence where each element of [data] is produced by mapping the
@@ -67,13 +69,13 @@ class DataSequence(object):
         """
         if interp=="sinc":
             ## downsample using sinc filter
-            return sincinterp2D(self.data, self.data_times, self.tr_times, **kwargs)
+            return sincinterp2D(self.data, self.data_times, self.bin_times, **kwargs)
         elif interp=="lanczos":
             ## downsample using Lanczos filter
-            return lanczosinterp2D(self.data, self.data_times, self.tr_times, **kwargs)
+            return lanczosinterp2D(self.data, self.data_times, self.bin_times, **kwargs)
         elif interp=="gabor":
             ## downsample using Gabor filter
-            return np.abs(gabor_xfm2D(self.data.T, self.data_times, self.tr_times, **kwargs)).T
+            return np.abs(gabor_xfm2D(self.data.T, self.data_times, self.bin_times, **kwargs)).T
         else:
             dsize = self.data.shape[1]
             outmat = np.zeros((len(self.split_inds)+1, dsize))
@@ -86,10 +88,10 @@ class DataSequence(object):
     def copy(self):
         """Returns a copy of this DataSequence.
         """
-        return DataSequence(list(self.data), self.split_inds.copy(), self.data_times, self.tr_times)
+        return DataSequence(list(self.data), self.split_inds.copy(), self.data_times, self.bin_times)
     
     @classmethod
-    def from_grid(cls, grid_transcript, trfile):
+    def from_grid(cls, grid_transcript, bin_times):
         """Creates a new DataSequence from a [grid_transript] and a [trfile].
         grid_transcript should be the product of the 'make_simple_transcript' method of TextGrid.
         """
@@ -102,11 +104,9 @@ class DataSequence(object):
         word_ends = np.array(list(map(float, list(zip(*grid_transcript))[1])))
         word_avgtimes = (word_starts + word_ends)/2.0
         
-        tr = trfile.avgtr
-        trtimes = trfile.get_reltriggertimes()
-        
-        split_inds = [(word_starts<(t+tr)).sum() for t in trtimes][:-1]
-        return cls(data, split_inds, word_avgtimes, trtimes+tr/2.0)
+        split_inds = [(word_starts<(b+config.BIN_SIZE)).sum() for b in bin_times][:-1]
+        ds = cls(data, split_inds, word_avgtimes, bin_times + config.BIN_SIZE/2.0, word_starts)
+        return ds
 
     @classmethod
     def from_chunks(cls, chunks):

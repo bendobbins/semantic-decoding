@@ -50,7 +50,7 @@ function save_path = save_data_by_freq(data, cfg)
         
         % Save
         fprintf("Saving...\n")
-        save_dir = fullfile(cfg.home_dir, sprintf("%s_Processed/FIR", cfg.subjname));
+        save_dir = fullfile(cfg.home_dir, "..", sprintf("%s_Processed/FIR", cfg.subjname));
         if ~exist(save_dir, 'dir')
             mkdir(save_dir);
         end

@@ -110,6 +110,40 @@ def lanczosinterp2D(data, oldtime, newtime, window=3, cutoff_mult=1.0, rectify=F
 
     return newdata
 
+def onsetinterp2D(data, oldtime, newtime):
+    """Places row i of [data] (one row per word) in the bin of [newtime] that contains [oldtime][i],
+    the word's onset. Returns a [len(newtime) x data.shape[1]] matrix that is zero in bins where no
+    word starts; words starting in the same bin are summed. There is no smoothing (unlike
+    lanczosinterp2D): each word's response over time is left to make_delayed and the regression.
+
+    [newtime] must be evenly spaced bin centers (DataSequence.bin_times); bin i covers
+    [newtime[i] - width/2, newtime[i] + width/2). [oldtime] must be word onsets on the same clock
+    (DataSequence.data_starts), not data_times (word midpoints).
+    """
+    ## Bin width and the start of the first bin, from the bin centers ##
+    width = np.mean(np.diff(newtime))
+    first_edge = newtime[0] - width/2
+
+    ## Bin index of each onset ##
+    # Onsets exactly on a bin edge (16% of SE's at 50 ms bins) belong to the later bin, but float error
+    # (~1e-12 s) can put them in the earlier one; adding 1e-7 s, far below word-time precision, prevents that
+    bininds = np.floor((np.asarray(oldtime) - first_edge + 1e-7) / width).astype(int)
+
+    ## Drop words whose onsets fall outside the bins, with a warning ##
+    inrange = (bininds >= 0) & (bininds < len(newtime))
+    if not inrange.all():
+        logger.warning("onsetinterp2D: dropped %d of %d words whose onsets fall outside the bins."
+                       % ((~inrange).sum(), len(inrange)))
+
+    ## Onset matrix: onsetmat[b, w] = 1 if word w starts in bin b ##
+    onsetmat = np.zeros((len(newtime), len(oldtime)))
+    onsetmat[bininds[inrange], np.nonzero(inrange)[0]] = 1
+
+    ## Each bin's row = sum of the embeddings of the words starting in it (almost always 0 or 1 word) ##
+    newdata = np.dot(onsetmat, data)
+
+    return newdata
+
 def sincupinterp2D(data, oldtime, newtimes, cutoff, window=1):
     """Uses sinc interpolation to upsample the columns of [data], assuming that the i'th
     row of data comes from oldtime[i].  A new matrix with the same number of columns

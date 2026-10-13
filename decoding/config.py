@@ -14,13 +14,18 @@ SCORE_DIR = os.path.join(REPO_DIR, "scores")
 
 # GPT encoding model parameters
 
+SAMPLE_RATE = 2000
+# MUST BE IN SECONDS, NOT MILLISECONDS
+BIN_SIZE = 0.05
+STEP_SIZE = 0.01
+STEP_EM = False
+
 TRIM = 5
-STIM_DELAYS = [1, 2, 3, 4]
-RESP_DELAYS = [-4, -3, -2, -1]
-ALPHAS = np.logspace(1, 3, 10)
-NBOOTS = 50
-VOXELS = 10000
-CHUNKLEN = 40
+STIM_DELAYS = list(range(0, 5))
+RESP_DELAYS = [-num for num in STIM_DELAYS]
+ALPHAS = np.logspace(1, 5, 17)
+NBOOTS = 10
+CHUNKLEN = 400
 GPT_LAYER = 9
 GPT_WORDS = 5
 

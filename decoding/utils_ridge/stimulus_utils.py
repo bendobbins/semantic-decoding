@@ -4,8 +4,8 @@ from os.path import join, dirname
 
 from utils_ridge.textgrid import TextGrid
 
-def load_textgrids(stories, data_dir: str):
-    base = join(data_dir, "train_stimulus")
+def load_textgrids(stories, subject, data_dir: str):
+    base = join(data_dir, "train_stimulus", subject)
     grids = {}
     for story in stories:
         grid_path = os.path.join(base, "%s.TextGrid" % story)

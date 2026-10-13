@@ -1,13 +1,18 @@
 import numpy as np
 import itertools as itools
+import config
+import os
+import json
 from utils_ridge.DataSequence import DataSequence
 
 DEFAULT_BAD_WORDS = frozenset(["sentence_start", "sentence_end", "br", "lg", "ls", "ns", "sp"])
 
-def make_word_ds(grids, trfiles, bad_words=DEFAULT_BAD_WORDS):
+def make_word_ds(grids, subject, bad_words=DEFAULT_BAD_WORDS):
     """Creates DataSequence objects containing the words from each grid, with any words appearing
     in the [bad_words] set removed.
     """
+    with open(os.path.join(config.DATA_TRAIN_DIR, "respdict.json"), "r") as f:
+        respdict = json.load(f)[subject]
     ds = dict()
     stories = grids.keys()
     for st in stories:
@@ -15,7 +20,11 @@ def make_word_ds(grids, trfiles, bad_words=DEFAULT_BAD_WORDS):
         ## Filter out bad words
         goodtranscript = [x for x in grtranscript
                           if x[2].lower().strip("{}").strip() not in bad_words]
-        d = DataSequence.from_grid(goodtranscript, trfiles[st][0])
+        if not config.STEP_EM:
+            bin_times = np.arange(int(respdict[st] / config.SAMPLE_RATE / config.BIN_SIZE)) * config.BIN_SIZE + grids[st].xmin
+        else:
+            pass
+        d = DataSequence.from_grid(goodtranscript, bin_times)
         ds[st] = d
 
     return ds
@@ -70,14 +79,14 @@ def histogram_phonemes(ds, phonemeset=phonemes):
         except Exception as e:
             pass
 
-    return DataSequence(newdata, ds.split_inds, ds.data_times, ds.tr_times)
+    return DataSequence(newdata, ds.split_inds, ds.data_times, ds.bin_times)
 
 def histogram_phonemes2(ds, phonemeset=phonemes):
     """Histograms the phonemes in the DataSequence [ds].
     """
     olddata = np.array([ph.upper().strip("0123456789") for ph in ds.data])
     newdata = np.vstack([olddata==ph for ph in phonemeset]).T
-    return DataSequence(newdata, ds.split_inds, ds.data_times, ds.tr_times)
+    return DataSequence(newdata, ds.split_inds, ds.data_times, ds.bin_times)
 
 def make_semantic_model(ds, lsasm):
     newdata = []
@@ -87,7 +96,7 @@ def make_semantic_model(ds, lsasm):
         except KeyError as e:
             v = np.zeros((lsasm.data.shape[0],))
         newdata.append(v)
-    return DataSequence(np.array(newdata), ds.split_inds, ds.data_times, ds.tr_times)
+    return DataSequence(np.array(newdata), ds.split_inds, ds.data_times, ds.bin_times)
 
 def make_character_model(dss):
     """Make character indicator model for a dict of datasequences.
@@ -107,17 +116,17 @@ def make_character_model(dss):
         for ti,charlist in enumerate(ds.data):
             for char in charlist:
                 charmat[ti, char_inds[st][char]] = 1
-        charmodels[st] = DataSequence(charmat, ds.split_inds, ds.data_times, ds.tr_times)
+        charmodels[st] = DataSequence(charmat, ds.split_inds, ds.data_times, ds.bin_times)
 
     return charmodels, char_inds
 
 def make_dialogue_model(ds):
-    return DataSequence(np.ones((len(ds.data),1)), ds.split_inds, ds.data_times, ds.tr_times)
+    return DataSequence(np.ones((len(ds.data),1)), ds.split_inds, ds.data_times, ds.bin_times)
 
 def modulate(ds, vec):
     """Multiplies each row (each word/phoneme) by the corresponding value in [vec].
     """
-    return DataSequence((ds.data.T*vec).T, ds.split_inds, ds.data_times, ds.tr_times)
+    return DataSequence((ds.data.T*vec).T, ds.split_inds, ds.data_times, ds.bin_times)
 
 def catmats(*seqs):
     keys = seqs[0].keys()

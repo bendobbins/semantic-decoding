@@ -2,6 +2,7 @@ import argparse
 import math
 import os
 import glob
+os.environ.setdefault("USE_TF", "0")  # installed TensorFlow needs AVX; keep transformers from importing it
 import whisperx
 import torch
 import soundfile as sf

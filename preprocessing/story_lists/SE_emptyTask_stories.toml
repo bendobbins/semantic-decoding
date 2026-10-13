@@ -1,0 +1,207 @@
+# Story list for SE_emptyTask, read by preprocessing/make_story_textgrids.py.
+# Written from the handwritten list of story times (runs 10, 11, 12, 20; run 01 is left out for now).
+#
+# Times are AUDIO times: positions in data/SE_emptyTask_<run>_in.wav, written "m:ss" or "m:ss.ss"
+# (minutes can go past 59, e.g. "60:00"). The script converts them to recording time with the run's
+# offset, clips stories to their recording, and moves a story edge that lands inside a word to the
+# middle of the silence next to it.
+#
+# [runs.<run>]          one per run, named as in the file names ("10", or "01" with its leading zero)
+#   offset              audio time - recording time, in seconds
+#   audio_transcript    optional: an audio-time start<TAB>end<TAB>word transcript in data/. The offset is
+#                       measured from it and must match `offset` (which can then be left out).
+#
+# [[stories]]           one TextGrid each, listed in this order in the stats file
+#   name                the file name, without .TextGrid (no / \ : or "). To rename a TextGrid, rename it
+#                       here too, or regenerating makes a second copy under the old name. Where a file has
+#                       been renamed, its name on the handwritten list is in a comment.
+#   run                 the run it was played in
+#   parts               [label, start, end], each part starting where the one before it ends. The story
+#                       runs from the first start to the last end. To leave something out (like a room
+#                       conversation), make separate stories: a gap inside one story would be written as
+#                       silence, and the neural data there isn't silence.
+#   notes               optional, copied into the stats file
+#
+# A story entirely outside its recording gets no TextGrid; the stats file lists it.
+
+[runs.10]
+offset = 1711.265961
+audio_transcript = "original_data/SE_emptyTask_10_story_words.txt.bak.txt"
+
+[runs.11]
+offset = 1411.595257
+audio_transcript = "original_data/SE_emptyTask_11_story_words_original.txt"
+
+[runs.12]
+offset = 0.0            # labels/ was already in audio time
+
+[runs.20]
+offset = 0.0            # labels/ was already in audio time
+
+
+# ---- file 10 -----------------------------------------------------------------------------------------
+
+[[stories]]
+name = "allatsea"                        # list: "Bathtub story" (list note: "1 skip")
+run = "10"
+parts = [
+    ["story", "42:51", "48:07"],
+    ["description from radio lady", "48:07", "48:30"],
+]
+
+[[stories]]
+name = "amothersjourney"                 # list: "Seamstress story", before the room conversation
+run = "10"
+parts = [
+    ["description & intro", "48:30", "49:46"],
+    ["story", "49:46", "55:07.72"],         # list: 55:08
+]
+notes = [
+    "First half of the Seamstress story (the second half is amothersjourneycont), split at the interruption & room conversation (55:08-56:11 on the list), which is in neither file.",
+    "Ends at 55:07.72, the end of the word \"A\", where the room conversation (deleted from labels/) starts; the list says 55:08.",
+]
+
+[[stories]]
+name = "amothersjourneycont"             # list: "Seamstress story", after the room conversation
+run = "10"
+parts = [
+    ["story", "56:11", "60:00"],
+]
+notes = [
+    "Second half of the Seamstress story (the first half is amothersjourney), after the room conversation. The story goes on in file 11, before the run 11 recording starts.",
+]
+
+
+# ---- file 11: the recording starts at audio 23:31.60, so the first four entries have no neural data ----
+
+[[stories]]
+name = "Seamstress story cont part 1"
+run = "11"
+parts = [
+    ["story", "0:00", "1:06"],
+]
+
+[[stories]]
+name = "Seamstress story cont part 2"   # the list leaves out 1:06-1:47
+run = "11"
+parts = [
+    ["story", "1:47", "2:53"],
+    ["radio outro", "2:53", "3:22"],
+]
+
+[[stories]]
+name = "Secret agent story (WWII lady)"
+run = "11"
+parts = [
+    ["story", "3:22", "15:29"],
+    ["radio outro", "15:29", "16:15"],
+]
+
+[[stories]]
+name = "Dehaan Hussain story"
+run = "11"
+parts = [
+    ["story", "16:15", "21:29"],
+    ["radio outro", "21:29", "22:00"],
+]
+
+[[stories]]
+name = "ashesandsalmon"                  # list: "Jhoan Julietta Buck story"
+run = "11"
+parts = [
+    ["story", "22:01", "36:19"],
+    ["radio outro", "36:19", "37:53"],
+]
+
+[[stories]]
+name = "soundtracktoyourlifehanif"       # list: "The mall story"
+run = "11"
+parts = [
+    ["intro", "37:53", "38:21"],
+    ["story", "38:21", "49:20"],
+    ["outro", "49:20", "50:07"],
+]
+
+[[stories]]
+name = "bandcamp"                        # list: "Katie Brooklyn: HS marching band"
+run = "11"
+parts = [
+    ["intro", "50:07", "50:31"],
+    ["story", "50:31", "55:30"],
+    ["outro", "55:30", "56:05"],
+]
+
+[[stories]]
+name = "soundtracktoyourlife"            # list: "Country music (Reesey)"
+run = "11"
+parts = [
+    ["intro", "56:05", "56:25"],
+    ["story", "56:25", "60:00"],
+]
+notes = [
+    "The story continues in run 12: see \"soundtracktoyourlifecont\".",
+]
+
+
+# ---- file 12 -----------------------------------------------------------------------------------------
+
+[[stories]]
+name = "soundtracktoyourlifecont"        # list: "Country music (Reesey)", continued in file 12
+run = "12"
+parts = [
+    ["story (continued)", "0:00", "0:40"],
+]
+notes = [
+    "The end of \"soundtracktoyourlife\" from run 11, in its own file because it is in a different recording.",
+]
+
+[[stories]]
+name = "may6th"                          # list: "Step dad story"
+run = "12"
+parts = [
+    ["story", "0:40", "3:33"],
+    ["outro", "3:33", "4:08"],
+]
+
+[[stories]]
+name = "thisisjustthebeginning"          # list: "HIV positive story"
+run = "12"
+parts = [
+    ["story", "4:08", "9:00"],
+]
+
+
+# ---- file 20 -----------------------------------------------------------------------------------------
+
+[[stories]]
+name = "sweethands"                      # list: "Chef story"
+run = "20"
+parts = [
+    ["story", "3:39", "4:50"],
+    ["outro", "4:50", "5:32.12"],           # list: 5:33
+]
+notes = [
+    "Ends at 5:32.12 instead of 5:33 on the list, in the silence before \"YOU TALK ABOUT THIS TERM...\", so that sentence stays together in arlene.",
+]
+
+[[stories]]
+name = "arlene"                          # list: "More from Arlene"
+run = "20"
+parts = [
+    ["more from Arlene", "5:32.12", "7:50.37"],   # list: 5:33-8:12
+]
+notes = [
+    "Starts at 5:32.12 instead of 5:33 on the list (see sweethands).",
+    "Ends at 7:50.37 instead of 8:12 on the list, in the silence before the host's intro to aholeyfeast (\"THIS IS THE MOTH RADIO HOUR ... HERE'S DEE\"), which goes with aholeyfeast.",
+]
+
+[[stories]]
+name = "aholeyfeast"                     # list: "Hotpot"
+run = "20"
+parts = [
+    ["host intro", "7:50.37", "8:12"],       # list: Hotpot starts at 8:12
+    ["story", "8:12", "11:31"],
+]
+notes = [
+    "Starts at 7:50.37 instead of 8:12 on the list, so it includes the host's intro (see arlene).",
+]

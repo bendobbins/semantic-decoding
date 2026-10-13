@@ -39,7 +39,7 @@ if __name__ == "__main__":
     rates = {}
     for story in stories:
         ds = wordseqs[story]
-        words = DataSequence(np.ones(len(ds.data_times)), ds.split_inds, ds.data_times, ds.tr_times)
+        words = DataSequence(np.ones(len(ds.data_times)), ds.split_inds, ds.data_times, ds.bin_times)
         rates[story] = words.chunksums("lanczos", window = 3)
     nz_rate = np.concatenate([rates[story][5+config.TRIM:-config.TRIM] for story in stories], axis = 0)
     nz_rate = np.nan_to_num(nz_rate).reshape([-1, 1])

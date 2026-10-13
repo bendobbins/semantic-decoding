@@ -25,25 +25,31 @@ function data = prepare_data(cfg)
         % Audio annotations
     % Search a few known layouts/naming conventions: the labels may live in a
     % <subj>_Audio subfolder or flat alongside the .mat/.wav files in home_dir.
-    lbl_dir = fullfile(cfg.home_dir, "data/labels");
+    lbl_dir = fullfile(cfg.home_dir);
     lbl_base = sprintf("%s_%s_%s", cfg.subjname, cfg.task, cfg.expnum);
+    % Try the full .mat base name first (keeps suffixes like _conversation), then subj_task_exp
+    lbl_bases = string(lbl_base);
+    if isfield(cfg, "file_base")
+        lbl_bases = unique([string(cfg.file_base), lbl_bases], "stable");
+    end
     lbl_dirs = [string(lbl_dir), string(cfg.home_dir)];
-    lbl_suffixes = ["_labels.txt", "_in_labels.txt", ".txt", "_in.txt", "_story_words.txt"];
+    lbl_suffixes = ["_labels.txt", "_in_labels.txt", "_in_labels_whisperx.txt", ".txt", "_in.txt", "_story_words.txt"];
 
-    audio_labels_path = fullfile(lbl_dir, lbl_base + "_labels.txt"); % default, for the message below
+    audio_labels_path = fullfile(lbl_dir, lbl_bases(1) + "_labels.txt"); % default, for the message below
     found_labels = false;
-    for lbl_d = 1:numel(lbl_dirs)
-        for lbl_s = 1:numel(lbl_suffixes)
-            lbl_candidate = fullfile(lbl_dirs(lbl_d), lbl_base + lbl_suffixes(lbl_s));
-            if isfile(lbl_candidate)
-                audio_labels_path = lbl_candidate;
-                found_labels = true;
-                break
+    for lbl_b = 1:numel(lbl_bases)
+        for lbl_d = 1:numel(lbl_dirs)
+            for lbl_s = 1:numel(lbl_suffixes)
+                lbl_candidate = fullfile(lbl_dirs(lbl_d), lbl_bases(lbl_b) + lbl_suffixes(lbl_s));
+                if isfile(lbl_candidate)
+                    audio_labels_path = lbl_candidate;
+                    found_labels = true;
+                    break
+                end
             end
+            if found_labels, break, end
         end
-        if found_labels
-            break
-        end
+        if found_labels, break, end
     end
 
     if found_labels
@@ -234,18 +240,15 @@ function data = prepare_data(cfg)
     %    goodMask(bad_trials) = false;
     %end
     
-    word_labels = [];
-    voice_onset = [];
-    voice_offset = [];
-    badchannels = [];
-    channels = [];
-    
+    % Continuous data: one copy of each field, not per trial.
+    % answered_words is a cellstr (from readtable), so it can't go into a numeric array.
+    word_labels = answered_words(:)'; % answered word labels (cell array of char)
+    voice_onset = voice_onset_all(:)';
+    voice_offset = voice_offset_all(:)';
+    badchannels = badchannels_reindexed; % bad channel indices (into channels)
+    channels = cellstr(channels_all); % channel names
+
     for i = 1:numtrials
-        word_labels(i) = answered_words(i); % answered word label
-        voice_onset(i) = voice_onset_all(i);
-        voice_offset(i) = voice_offset_all(i);
-        badchannels(i) = badchannels_reindexed; % bad channels
-        channels(i) = convertStringsToChars(channels_all); % channel names
         %if exist("fixation_rel", "var")
         %    all_data(i,13) = {fixation_rel(i) + cfg.crop_start_bleed}; % fixation cross onset
         %end
@@ -270,6 +273,7 @@ function data = prepare_data(cfg)
     data.clinicalFs = clinicalFs;
     data.voice_onset = voice_onset;
     data.voice_offset = voice_offset;
+    data.word_labels = word_labels;
     data.channels = channels;
     data.badchannels = badchannels;
 end
