@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser.add_argument("--subject", type = str, required = True)
     parser.add_argument("--experiment", type = str, required = True)
     parser.add_argument("--task", type = str, required = True)
-    parser.add_argument("--model_dir", type = str, default = "models")
+    parser.add_argument("--model_dir", type = lambda p: os.path.join(config.REPO_DIR, p), default = "models")
     args = parser.parse_args()
     
     # determine GPT checkpoint based on experiment
@@ -29,10 +29,11 @@ if __name__ == "__main__":
     if args.experiment in ["imagined_speech", "perceived_movies"]: word_rate_voxels = "speech"
     else: word_rate_voxels = "auditory"
 
-    # load responses
+    # load response from test story
     subject = args.subject.split("_")[0]
-    hf = h5py.File(os.path.join(config.DATA_TEST_DIR, "test_response", subject, args.experiment, args.task + ".hf5"), "r")
-    resp = np.nan_to_num(hf["data"][:])
+    hf = h5py.File(os.path.join(config.DATA_TEST_DIR, "test_response", subject, args.experiment, args.task + ".mat"), "r")
+    ref = hf["all_data"][0, 0]
+    resp = np.nan_to_num(hf[ref][()].T)
     hf.close()
     
     # load gpt
