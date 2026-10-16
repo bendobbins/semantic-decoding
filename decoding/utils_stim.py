@@ -15,7 +15,7 @@ def get_story_wordseqs(stories, subject):
     wordseqs = make_word_ds(grids, subject)
     return wordseqs
     
-def get_stim(stories, subject, features, tr_stats = None):
+def get_stim(stories, subject, features, bin_stats = None):
     """extract quantitative features of stimulus stories
     """
     word_seqs = get_story_wordseqs(stories, subject)
@@ -31,14 +31,14 @@ def get_stim(stories, subject, features, tr_stats = None):
     ds_vecs = {story: onsetinterp2D(word_vecs[story], word_seqs[story].data_starts, word_seqs[story].bin_times)
                for story in stories}
     ds_mat = np.vstack([ds_vecs[story][config.TRIM:] for story in stories])
-    if tr_stats is None: 
+    if bin_stats is None: 
         r_mean, r_std = ds_mat.mean(0), ds_mat.std(0)
         r_std[r_std == 0] = 1
     else: 
-        r_mean, r_std = tr_stats
+        r_mean, r_std = bin_stats
     ds_mat = np.nan_to_num(np.dot((ds_mat - r_mean), np.linalg.inv(np.diag(r_std))))
     del_mat = make_delayed(ds_mat, config.STIM_DELAYS)
-    if tr_stats is None: return del_mat, (r_mean, r_std), (word_mean, word_std)
+    if bin_stats is None: return del_mat, (r_mean, r_std), (word_mean, word_std)
     else: return del_mat
 
 def predict_word_rate(resp, wt, vox, mean_rate):

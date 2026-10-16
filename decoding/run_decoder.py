@@ -10,8 +10,9 @@ from GPT import GPT
 from Decoder import Decoder, Hypothesis
 from LanguageModel import LanguageModel
 from EncodingModel import EncodingModel
-from StimulusModel import StimulusModel, get_lanczos_mat, affected_trs, LMFeatures
+from StimulusModel import StimulusModel, get_onset_mat, affected_bins, LMFeatures
 from utils_stim import predict_word_rate, predict_word_times
+from utils_resp import bin_resp_decoding
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -35,6 +36,7 @@ if __name__ == "__main__":
     ref = hf["all_data"][0, 0]
     resp = np.nan_to_num(hf[ref][()].T)
     hf.close()
+    resp = bin_resp_decoding(resp, args.subject, args.task)
     
     # load gpt
     with open(os.path.join(config.DATA_LM_DIR, gpt_checkpoint, "vocab.json"), "r") as f:
@@ -52,9 +54,9 @@ if __name__ == "__main__":
     encoding_model = np.load(os.path.join(load_location, "encoding_model_%s.npz" % gpt_checkpoint))
     weights = encoding_model["weights"]
     noise_model = encoding_model["noise_model"]
-    tr_stats = encoding_model["tr_stats"]
+    bin_stats = encoding_model["bin_stats"]
     word_stats = encoding_model["word_stats"]
-    em = EncodingModel(resp, weights, encoding_model["voxels"], noise_model, device = config.EM_DEVICE)
+    em = EncodingModel(resp, weights, noise_model, device = config.EM_DEVICE)
     em.set_shrinkage(config.NM_ALPHA)
     assert args.task not in encoding_model["stories"]
     
@@ -62,13 +64,15 @@ if __name__ == "__main__":
     word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["voxels"], word_rate_model["mean_rate"])
     if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
     else: word_times, tr_times = predict_word_times(word_rate, resp, starttime = 0)
-    lanczos_mat = get_lanczos_mat(word_times, tr_times)
+    # lanczos_mat = get_lanczos_mat(word_times, tr_times)
+
+    onset_mat = get_onset_mat(word_times, bin_times)
 
     # decode responses
     decoder = Decoder(word_times, config.WIDTH)
-    sm = StimulusModel(lanczos_mat, tr_stats, word_stats[0], device = config.SM_DEVICE)
+    sm = StimulusModel(onset_mat, bin_stats, word_stats[0], device = config.SM_DEVICE)
     for sample_index in range(len(word_times)):
-        trs = affected_trs(decoder.first_difference(), sample_index, lanczos_mat)
+        bins = affected_bins(decoder.first_difference(), sample_index, onset_mat)
         ncontext = decoder.time_window(sample_index, config.LM_TIME, floor = 5)
         beam_nucs = lm.beam_propose(decoder.beam, ncontext)
         for c, (hyp, nextensions) in enumerate(decoder.get_hypotheses()):
@@ -76,8 +80,8 @@ if __name__ == "__main__":
             if len(nuc) < 1: continue
             extend_words = [hyp.words + [x] for x in nuc]
             extend_embs = list(features.extend(extend_words))
-            stim = sm.make_variants(sample_index, hyp.embs, extend_embs, trs)
-            likelihoods = em.prs(stim, trs)
+            stim = sm.make_variants(sample_index, hyp.embs, extend_embs, bins)
+            likelihoods = em.prs(stim, bins)
             local_extensions = [Hypothesis(parent = hyp, extension = x) for x in zip(nuc, logprobs, extend_embs)]
             decoder.add_extensions(local_extensions, likelihoods, nextensions)
         decoder.extend(verbose = False)

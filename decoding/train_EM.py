@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # estimate encoding model
     rresp = get_resp(args.subject, stories, stack = True)
     n_channels = rresp.shape[1]
-    rstim, tr_stats, word_stats = get_stim(stories, args.subject, features)
+    rstim, bin_stats, word_stats = get_stim(stories, args.subject, features)
     nchunks = int(np.ceil(rresp.shape[0] / 5 / config.CHUNKLEN))
     weights, alphas, bscorrs = bootstrap_ridge(rstim, rresp, use_corr = False, alphas = config.ALPHAS,
         nboots = config.NBOOTS, chunklen = config.CHUNKLEN, nchunks = nchunks)        
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     del rstim, rresp
     
     # estimate noise model
-    stim_dict = {story : get_stim([story], args.subject, features, tr_stats = tr_stats) for story in stories}
+    stim_dict = {story : get_stim([story], args.subject, features, bin_stats = bin_stats) for story in stories}
     resp_dict = get_resp(args.subject, stories, stack = False)
     noise_model = np.zeros([n_channels, n_channels])
     heldout_pred, heldout_r = [], []
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     os.makedirs(save_location, exist_ok = True)
     np.savez(os.path.join(save_location, "encoding_model_%s" % args.gpt), 
         weights = weights, noise_model = noise_model, alphas = alphas, stories = stories,
-        tr_stats = np.array(tr_stats), word_stats = np.array(word_stats),
+        bin_stats = np.array(bin_stats), word_stats = np.array(word_stats),
         bs_scores = bs_scores, heldout_r = np.array(heldout_r), heldout_r_pooled = heldout_r_pooled,
         heldout_pred = np.vstack(heldout_pred), heldout_bins = np.array([len(p) for p in heldout_pred]))
     if args.null_shifts: np.save(os.path.join(save_location, "encoding_model_%s_null_r" % args.gpt), null_r) # comparison

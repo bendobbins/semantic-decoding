@@ -5,10 +5,10 @@ torch.set_default_tensor_type(torch.FloatTensor)
 class EncodingModel():
     """class for computing the likelihood of observing brain recordings given a word sequence
     """
-    def __init__(self, resp, weights, voxels, sigma, device = "cpu"):
+    def __init__(self, resp, weights, sigma, device = "cpu"):
         self.device = device
-        self.weights = torch.from_numpy(weights[:, voxels]).float().to(self.device)
-        self.resp = torch.from_numpy(resp[:, voxels]).float().to(self.device)
+        self.weights = torch.from_numpy(weights).float().to(self.device)
+        self.resp = torch.from_numpy(resp).float().to(self.device)
         self.sigma = sigma
         
     def set_shrinkage(self, alpha):
