@@ -12,6 +12,11 @@ def load_textgrids(stories, subject, data_dir: str):
         grids[story] = TextGrid(open(grid_path).read())
     return grids
 
+def load_test_textgrid(story, subject, data_dir: str):
+    base = join(data_dir, "test_stimulus", subject)
+    grid_path = join(base, "%s.TextGrid" % story)
+    return TextGrid(open(grid_path).read())
+
 class TRFile(object):
     def __init__(self, trfilename, expectedtr=2.0045):
         """Loads data from [trfilename], should be output from stimulus presentation code.

@@ -13,6 +13,7 @@ from EncodingModel import EncodingModel
 from StimulusModel import StimulusModel, get_onset_mat, affected_bins, LMFeatures
 from utils_stim import predict_word_rate, predict_word_times
 from utils_resp import bin_resp_decoding
+from utils_ridge import stimulus_utils, DataSequence
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     # load models
     # load_location = os.path.join(config.MODEL_DIR, args.subject)
     load_location = os.path.join(config.REPO_DIR, args.model_dir, args.subject)
-    word_rate_model = np.load(os.path.join(load_location, "word_rate_model_%s.npz" % word_rate_voxels), allow_pickle = True)
+    # word_rate_model = np.load(os.path.join(load_location, "word_rate_model_%s.npz" % word_rate_voxels), allow_pickle = True)
     encoding_model = np.load(os.path.join(load_location, "encoding_model_%s.npz" % gpt_checkpoint))
     weights = encoding_model["weights"]
     noise_model = encoding_model["noise_model"]
@@ -61,10 +62,25 @@ if __name__ == "__main__":
     assert args.task not in encoding_model["stories"]
     
     # predict word times
-    word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["voxels"], word_rate_model["mean_rate"])
-    if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
-    else: word_times, tr_times = predict_word_times(word_rate, resp, starttime = 0)
+    # word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["voxels"], word_rate_model["mean_rate"])
+    # if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
+    # else: word_times, tr_times = predict_word_times(word_rate, resp, starttime = 0)
     # lanczos_mat = get_lanczos_mat(word_times, tr_times)
+
+    # get actual word times (for checking)
+
+    grid = stimulus_utils.load_test_textgrid(args.task, args.subject, config.DATA_TEST_DIR)
+    grtranscript = grid.tiers[1].make_simple_transcript()
+    goodtranscript = [x for x in grtranscript
+                      if x[2].lower().strip("{}").strip() not in frozenset(["sentence_start", "sentence_end", "br", "lg", "ls", "ns", "sp"])]
+
+    with open(os.path.join(config.DATA_TEST_DIR, "respdict.json"), "r") as f:
+        respdict = json.load(f)[args.subject]
+    bin_start_times = np.arange(int(respdict[args.task] / config.SAMPLE_RATE / config.BIN_SIZE)) * config.BIN_SIZE + grid.xmin
+
+    d = DataSequence.DataSequence.from_grid(goodtranscript, bin_start_times)
+    word_times = d.data_starts
+    bin_times = d.bin_times
 
     onset_mat = get_onset_mat(word_times, bin_times)
 
