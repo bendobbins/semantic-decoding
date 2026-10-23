@@ -103,6 +103,9 @@ if __name__ == "__main__":
         decoder.extend(verbose = False)
         
     if args.experiment in ["perceived_movie", "perceived_multispeaker"]: decoder.word_times += 10
-    save_location = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment)
+    if args.model_dir != "models":
+        save_location = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment)
+    else:
+        save_location = os.path.join(config.RESULT_DIR, args.subject, args.experiment)
     os.makedirs(save_location, exist_ok = True)
     decoder.save(os.path.join(save_location, args.task))

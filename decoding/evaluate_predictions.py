@@ -34,7 +34,10 @@ if __name__ == "__main__":
         score = "recall")
 
     # load prediction transcript
-    pred_path = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment, args.task + ".npz")
+    if args.model_dir != "models":
+        pred_path = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment, args.task + ".npz")
+    else:
+        pred_path = os.path.join(config.RESULT_DIR, args.subject, args.experiment, args.task + ".npz")
     pred_data = np.load(pred_path)
     pred_words, pred_times = pred_data["words"], pred_data["times"]
 
