@@ -63,7 +63,7 @@ if __name__ == "__main__":
     
     # predict word times
     # word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["mean_rate"])
-    if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
+    # if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
     # else: word_times, tr_times = predict_word_times(word_rate, resp, starttime = 0)
     # lanczos_mat = get_lanczos_mat(word_times, tr_times)
 
