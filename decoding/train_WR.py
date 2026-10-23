@@ -24,13 +24,8 @@ if __name__ == "__main__":
     with open(os.path.join(config.DATA_TRAIN_DIR, "sess_to_story.json"), "r") as f:
         sess_to_story = json.load(f) 
     for sess in args.sessions:
-        stories.extend(sess_to_story[str(sess)])
+        stories.extend(sess_to_story[args.subject + str(sess)])
 
-    # ROI voxels
-    roi_subject = args.subject.split("_")[0]
-    with open(os.path.join(config.DATA_TRAIN_DIR, "ROIs", "%s.json" % roi_subject), "r") as f:
-        vox = json.load(f)
-            
     # estimate word rate model
     save_location = os.path.join(config.REPO_DIR, args.model_dir, args.subject)
     os.makedirs(save_location, exist_ok = True)
@@ -46,11 +41,10 @@ if __name__ == "__main__":
     mean_rate = np.mean(nz_rate)
     rate = nz_rate - mean_rate
     
-    for roi in ["speech", "auditory"]:
-        resp = get_resp(args.subject, stories, stack = True, vox = vox[roi])
-        delresp = make_delayed(resp, config.RESP_DELAYS)
-        nchunks = int(np.ceil(delresp.shape[0] / 5 / config.CHUNKLEN))    
-        weights, _, _ = bootstrap_ridge(delresp, rate, use_corr = False,
-            alphas = config.ALPHAS, nboots = config.NBOOTS, chunklen = config.CHUNKLEN, nchunks = nchunks)
-        np.savez(os.path.join(save_location, "word_rate_model_%s" % roi), 
-            weights = weights, mean_rate = mean_rate, voxels = vox[roi])
+    resp = get_resp(args.subject, stories, stack = True)
+    delresp = make_delayed(resp, config.RESP_DELAYS)
+    nchunks = int(np.ceil(delresp.shape[0] / 5 / config.CHUNKLEN))    
+    weights, _, _ = bootstrap_ridge(delresp, rate, use_corr = False,
+        alphas = config.ALPHAS, nboots = config.NBOOTS, chunklen = config.CHUNKLEN, nchunks = nchunks)
+    np.savez(os.path.join(save_location, "word_rate_model"), 
+        weights = weights, mean_rate = mean_rate)

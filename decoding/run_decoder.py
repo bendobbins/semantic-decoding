@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--subject", type = str, required = True)
     parser.add_argument("--experiment", type = str, required = True)
     parser.add_argument("--task", type = str, required = True)
-    parser.add_argument("--model_dir", type = lambda p: os.path.join(config.REPO_DIR, p), default = "models")
+    parser.add_argument("--model_dir", type = str, default = "models")
     args = parser.parse_args()
     
     # determine GPT checkpoint based on experiment
@@ -62,8 +62,8 @@ if __name__ == "__main__":
     assert args.task not in encoding_model["stories"]
     
     # predict word times
-    # word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["voxels"], word_rate_model["mean_rate"])
-    # if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
+    # word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["mean_rate"])
+    if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
     # else: word_times, tr_times = predict_word_times(word_rate, resp, starttime = 0)
     # lanczos_mat = get_lanczos_mat(word_times, tr_times)
 

@@ -41,10 +41,10 @@ def get_stim(stories, subject, features, bin_stats = None):
     if bin_stats is None: return del_mat, (r_mean, r_std), (word_mean, word_std)
     else: return del_mat
 
-def predict_word_rate(resp, wt, vox, mean_rate):
+def predict_word_rate(resp, wt, mean_rate):
     """predict word rate at each acquisition time
     """
-    delresp = make_delayed(resp[:, vox], config.RESP_DELAYS)
+    delresp = make_delayed(resp, config.RESP_DELAYS)
     rate = ((delresp.dot(wt) + mean_rate)).reshape(-1).clip(min = 0)
     return np.round(rate).astype(int)
 
