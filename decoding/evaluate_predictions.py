@@ -48,7 +48,7 @@ if __name__ == "__main__":
     for reference in args.references:
 
         # load reference transcript
-        ref_data = load_transcript(args.experiment, reference)
+        ref_data = load_transcript(args.subject, args.experiment, reference)
         ref_words, ref_times = ref_data["words"], ref_data["times"]
 
         # segment prediction and reference words into windows

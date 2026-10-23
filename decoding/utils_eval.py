@@ -16,10 +16,10 @@ BAD_WORDS_PERCEIVED_SPEECH = frozenset(["sentence_start", "sentence_end", "br", 
 BAD_WORDS_OTHER_TASKS = frozenset(["", "sp", "uh"])
 
 from utils_ridge.textgrid import TextGrid
-def load_transcript(experiment, task):
+def load_transcript(subject, experiment, task):
     if experiment in ["perceived_speech", "perceived_multispeaker"]: skip_words = BAD_WORDS_PERCEIVED_SPEECH
     else: skip_words = BAD_WORDS_OTHER_TASKS
-    grid_path = os.path.join(config.DATA_TEST_DIR, "test_stimulus", experiment, task.split("_")[0] + ".TextGrid")
+    grid_path = os.path.join(config.DATA_TEST_DIR, "test_stimulus", subject, task.split("_")[0] + ".TextGrid")
     transcript_data = {}
     with open(grid_path) as f: 
         grid = TextGrid(f.read())
