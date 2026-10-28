@@ -21,7 +21,8 @@ STEP_SIZE = 0.01
 STEP_EM = False
 
 TRIM = 5
-STIM_DELAYS = list(range(0, 5))
+# Models will look at 50 * end of STIM_DELAYS amt of words ms, so if it is list(range(0, 5)) then they will look at 50 * 5 = 250 ms
+STIM_DELAYS = list(range(0, 15))
 RESP_DELAYS = [-num for num in STIM_DELAYS]
 ALPHAS = np.logspace(1, 5, 17)
 NBOOTS = 10

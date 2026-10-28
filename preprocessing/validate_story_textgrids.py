@@ -137,9 +137,14 @@ def main():
         with open(paths.labels(run)) as f:
             labels[run] = [(float(a), float(b), w.strip()) for a, b, w in
                            (line.rstrip("\n").split("\t") for line in f if line.strip())]
-        with h5py.File(paths.raw(run), "r") as f:
-            fs = float(np.array(f["parameters"]["SamplingRate"]["NumericValue"]).flatten()[0])
-            recording[run] = (fs, f["signal"].shape[1])
+        if h5py.is_hdf5(paths.raw(run)):
+            with h5py.File(paths.raw(run), "r") as f:
+                fs = float(np.array(f["parameters"]["SamplingRate"]["NumericValue"]).flatten()[0])
+                recording[run] = (fs, f["signal"].shape[1])
+        else:                                                 # MATLAB v5: signal is (n_samples, n_channels)
+            import scipy.io
+            p = scipy.io.loadmat(paths.raw(run), variable_names=["parameters", "signal"], squeeze_me=True, struct_as_record=False)
+            recording[run] = (float(np.array(p["parameters"].SamplingRate.NumericValue).flatten()[0]), p["signal"].shape[0])
         if os.path.exists(paths.hg(run)):
             with h5py.File(paths.hg(run), "r") as f:
                 check(f[f["all_data"][0, 0]].shape[1] == recording[run][1], f"run {run}: HG and raw sample counts differ")

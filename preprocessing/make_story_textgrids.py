@@ -123,13 +123,23 @@ def read_words(path, labels=True):
     return words
 
 
+def raw_fs_and_length(path):
+    """(sampling rate, number of samples) of a raw BCI2000 .mat file, MATLAB v7.3 (HDF5) or older (v5)."""
+    if h5py.is_hdf5(path):
+        with h5py.File(path, "r") as f:
+            fs = float(np.array(f["parameters"]["SamplingRate"]["NumericValue"]).flatten()[0])
+            return fs, f["signal"].shape[1]              # stored transposed: (n_channels, n_samples)
+    import scipy.io
+    shapes = dict((name, shape) for name, shape, _ in scipy.io.whosmat(path))
+    params = scipy.io.loadmat(path, variable_names=["parameters"], squeeze_me=True, struct_as_record=False)["parameters"]
+    return float(np.array(params.SamplingRate.NumericValue).flatten()[0]), shapes["signal"][0]   # (n_samples, n_channels)
+
+
 def recording_info(paths, run):
     """(sampling rate, number of samples) of a run's ECoG recording."""
     if not os.path.exists(paths.raw(run)):
         raise SystemExit(f"missing {paths.raw(run)}, needed for run {run}'s sampling rate and length")
-    with h5py.File(paths.raw(run), "r") as f:
-        fs = float(np.array(f["parameters"]["SamplingRate"]["NumericValue"]).flatten()[0])
-        n_samples = f["signal"].shape[1]                 # stored transposed: (n_channels, n_samples)
+    fs, n_samples = raw_fs_and_length(paths.raw(run))
     if os.path.exists(paths.hg(run)):
         with h5py.File(paths.hg(run), "r") as f:
             n_hg = f[f["all_data"][0, 0]].shape[1]        # (n_channels, n_samples) too

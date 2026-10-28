@@ -1,0 +1,95 @@
+# Story list for PV_pictureNaming, read by preprocessing/make_story_textgrids.py (SE_emptyTask_stories.toml documents the format).
+#
+# PV's runs are live conversations between PV and a researcher, not stories; the "pictureNaming" and
+# "sentenceReading" in the file names are left over from the original task names. Each run is one "story"
+# spanning its whole recording, using every word from both speakers (no speaker labels yet).
+#
+# labels/PV_pictureNaming_<run>_story_words.txt are unchanged copies of original_data/PV_pictureNaming_<run>_conversation_in_labels_whisperx.txt.
+# Offset 0: each _in.wav is the length of its recording to within 0.06 s. Story ends are recording lengths
+# (n_samples / 2000 Hz), in seconds. original_data/PV_pictureNaming_<run>.mat are symlinks to the _conversation.mat files.
+
+[runs.12]
+offset = 0.0
+
+[runs.13]
+offset = 0.0
+
+[runs.14]
+offset = 0.0
+
+[runs.15]
+offset = 0.0
+
+[runs.30]
+offset = 0.0
+
+[runs.31]
+offset = 0.0
+
+[runs.32]
+offset = 0.0
+
+[runs.33]
+offset = 0.0
+
+[[stories]]
+name = "pvpn12"
+run = "12"
+parts = [
+    ["conversation", 0.0, 548.7495],
+]
+
+[[stories]]
+name = "pvpn13"
+run = "13"
+parts = [
+    ["conversation", 0.0, 548.665],
+]
+notes = [
+    "Ends at 548.665 s, in the silence before the last word \"like\" (548.675-548.755 s), because the recording ends at 548.7495 s, partway through it.",
+]
+
+[[stories]]
+name = "pvpn14"
+run = "14"
+parts = [
+    ["conversation", 0.0, 548.7495],
+]
+
+[[stories]]
+name = "pvpn15"
+run = "15"
+parts = [
+    ["conversation", 0.0, 396.7995],
+]
+
+[[stories]]
+name = "pvpn30"
+run = "30"
+parts = [
+    ["conversation", 0.0, 548.7495],
+]
+
+[[stories]]
+name = "pvpn31"
+run = "31"
+parts = [
+    ["conversation", 0.0, 548.444],
+]
+notes = [
+    "Ends at 548.444 s, in the silence before the last word \"obviously\" (548.454-548.755 s), because the recording ends at 548.7495 s, partway through it.",
+]
+
+[[stories]]
+name = "pvpn32"
+run = "32"
+parts = [
+    ["conversation", 0.0, 168.3495],
+]
+
+[[stories]]
+name = "pvpn33"
+run = "33"
+parts = [
+    ["conversation", 0.0, 20.4995],
+]

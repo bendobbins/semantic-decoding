@@ -1,0 +1,42 @@
+# Story list for PV_sentenceReading, read by preprocessing/make_story_textgrids.py (SE_emptyTask_stories.toml documents the format).
+#
+# PV's runs are live conversations between PV and a researcher, not stories; the "pictureNaming" and
+# "sentenceReading" in the file names are left over from the original task names. Each run is one "story"
+# spanning its whole recording, using every word from both speakers (no speaker labels yet).
+#
+# labels/PV_sentenceReading_<run>_story_words.txt are unchanged copies of original_data/PV_sentenceReading_<run>_conversation_in_labels_whisperx.txt.
+# Offset 0: each _in.wav is the length of its recording to within 0.06 s. Story ends are recording lengths
+# (n_samples / 2000 Hz), in seconds. original_data/PV_sentenceReading_<run>.mat are symlinks to the _conversation.mat files.
+
+[runs.01]
+offset = 0.0
+
+[runs.02]
+offset = 0.0
+
+[runs.03]
+offset = 0.0
+
+[[stories]]
+name = "pvsr01"
+run = "01"
+parts = [
+    ["conversation", 0.0, 197.8995],
+]
+
+[[stories]]
+name = "pvsr02"
+run = "02"
+parts = [
+    ["conversation", 0.0, 226.32],
+]
+notes = [
+    "Ends at 226.32 s, in the silence before the last word \"just\" (226.340-226.460 s), because the recording ends at 226.4495 s, partway through it.",
+]
+
+[[stories]]
+name = "pvsr03"
+run = "03"
+parts = [
+    ["conversation", 0.0, 64.4495],
+]

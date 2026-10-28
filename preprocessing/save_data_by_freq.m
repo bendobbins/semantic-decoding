@@ -33,11 +33,11 @@ function save_path = save_data_by_freq(data, cfg)
 
         % Here we zscore the entire file since there is no baseline period
         % Do this downstream if not now
-        try
-            if cfg.flags.normalizeBeforeSaving
-                smoothed_hg_ECoG = zscore(smoothed_hg_ECoG, [], 1);
-            end
-        catch
+        %if cfg.flags.normalizeBeforeSaving
+        %    smoothed_hg_ECoG = zscore(smoothed_hg_ECoG, [], 1);
+        %end
+        if cfg.flags.normalizeBeforeSaving
+            smoothed_hg_ECoG = (smoothed_hg_ECoG - mean(smoothed_hg_ECoG, 1)) ./ std(smoothed_hg_ECoG, 0, 1);
         end
     
         % Segment into trials/epochs, and insert into all_data    
