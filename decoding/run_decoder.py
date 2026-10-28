@@ -13,7 +13,7 @@ from EncodingModel import EncodingModel
 from StimulusModel import StimulusModel, get_onset_mat, affected_bins, LMFeatures
 from utils_stim import predict_word_rate, predict_word_times
 from utils_resp import bin_resp_decoding
-from utils_ridge import stimulus_utils, DataSequence
+from utils_ridge import stimulus_utils
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -21,15 +21,12 @@ if __name__ == "__main__":
     parser.add_argument("--experiment", type = str, required = True)
     parser.add_argument("--task", type = str, required = True)
     parser.add_argument("--model_dir", type = str, default = "models")
+    parser.add_argument("--word_times", type = str, default = "predicted", choices = ["predicted", "actual"])
     args = parser.parse_args()
     
     # determine GPT checkpoint based on experiment
     if args.experiment in ["imagined_speech"]: gpt_checkpoint = "imagined"
     else: gpt_checkpoint = "perceived"
-
-    # determine word rate model voxels based on experiment
-    if args.experiment in ["imagined_speech", "perceived_movies"]: word_rate_voxels = "speech"
-    else: word_rate_voxels = "auditory"
 
     # load response from test story
     subject = args.subject.split("_")[0]
@@ -51,7 +48,6 @@ if __name__ == "__main__":
     # load models
     # load_location = os.path.join(config.MODEL_DIR, args.subject)
     load_location = os.path.join(config.REPO_DIR, args.model_dir, args.subject)
-    # word_rate_model = np.load(os.path.join(load_location, "word_rate_model_%s.npz" % word_rate_voxels), allow_pickle = True)
     encoding_model = np.load(os.path.join(load_location, "encoding_model_%s.npz" % gpt_checkpoint))
     weights = encoding_model["weights"]
     noise_model = encoding_model["noise_model"]
@@ -61,27 +57,21 @@ if __name__ == "__main__":
     em.set_shrinkage(config.NM_ALPHA)
     assert args.task not in encoding_model["stories"]
     
-    # predict word times
-    # word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["mean_rate"])
-    # if args.experiment == "perceived_speech": word_times, tr_times = predict_word_times(word_rate, resp, starttime = -10)
-    # else: word_times, tr_times = predict_word_times(word_rate, resp, starttime = 0)
-    # lanczos_mat = get_lanczos_mat(word_times, tr_times)
-
-    # get actual word times (for checking)
-
+    # word times: predicted from the response by the word rate model, or the actual onsets in the test TextGrid
     grid = stimulus_utils.load_test_textgrid(args.task, args.subject, config.DATA_TEST_DIR)
-    grtranscript = grid.tiers[1].make_simple_transcript()
-    goodtranscript = [x for x in grtranscript
-                      if x[2].lower().strip("{}").strip() not in frozenset(["sentence_start", "sentence_end", "br", "lg", "ls", "ns", "sp"])]
-
-    with open(os.path.join(config.DATA_TEST_DIR, "respdict.json"), "r") as f:
-        respdict = json.load(f)[args.subject]
-    bin_start_times = np.arange(int(respdict[args.task] / config.SAMPLE_RATE / config.BIN_SIZE)) * config.BIN_SIZE + grid.xmin
-
-    d = DataSequence.DataSequence.from_grid(goodtranscript, bin_start_times)
-    word_times = d.data_starts
-    bin_times = d.bin_times
-
+    bin_times = np.arange(resp.shape[0]) * config.BIN_SIZE + grid.xmin + config.BIN_SIZE / 2.0 # center of each resp row; resp starts at xmin
+    if args.word_times == "predicted":
+        word_rate_model = np.load(os.path.join(load_location, "word_rate_model.npz"))
+        assert args.task not in word_rate_model["stories"]
+        assert word_rate_model["bin_size"] == config.BIN_SIZE, "word rate model was trained with another BIN_SIZE"
+        assert list(word_rate_model["resp_delays"]) == config.RESP_DELAYS, "word rate model was trained with other RESP_DELAYS"
+        word_rate = predict_word_rate(resp, word_rate_model["weights"], word_rate_model["mean_rate"])
+        word_times, _ = predict_word_times(word_rate, bin_times)
+    else:
+        grtranscript = grid.tiers[1].make_simple_transcript()
+        goodtranscript = [x for x in grtranscript
+                          if x[2].lower().strip("{}").strip() not in frozenset(["sentence_start", "sentence_end", "br", "lg", "ls", "ns", "sp"])]
+        word_times = np.array([float(x[0]) for x in goodtranscript])
     onset_mat = get_onset_mat(word_times, bin_times)
 
     # decode responses
@@ -102,10 +92,10 @@ if __name__ == "__main__":
             decoder.add_extensions(local_extensions, likelihoods, nextensions)
         decoder.extend(verbose = False)
         
-    if args.experiment in ["perceived_movie", "perceived_multispeaker"]: decoder.word_times += 10
     if args.model_dir != "models":
         save_location = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment)
     else:
         save_location = os.path.join(config.RESULT_DIR, args.subject, args.experiment)
     os.makedirs(save_location, exist_ok = True)
-    decoder.save(os.path.join(save_location, args.task))
+    # evaluate_predictions.py and compare_predictions.py drop the suffix by splitting the name at "_"
+    decoder.save(os.path.join(save_location, args.task if args.word_times == "predicted" else args.task + "_actualtimes"))

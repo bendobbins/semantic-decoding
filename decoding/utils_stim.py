@@ -46,19 +46,15 @@ def predict_word_rate(resp, wt, mean_rate):
     """
     delresp = make_delayed(resp, config.RESP_DELAYS)
     rate = ((delresp.dot(wt) + mean_rate)).reshape(-1).clip(min = 0)
-    return np.round(rate).astype(int)
+    return np.diff(np.floor(np.cumsum(rate) + 0.5).astype(int), prepend = 0)
 
-def predict_word_times(word_rate, resp, starttime = 0, tr = 2):
+def predict_word_times(word_rate, bin_times):
     """predict evenly spaced word times from word rate
     """
-    half = tr / 2
-    trf = TRFile(None, tr)
-    trf.soundstarttime = starttime
-    trf.simulate(resp.shape[0])
-    tr_times = trf.get_reltriggertimes() + half
+    half = config.BIN_SIZE / 2
 
     word_times = []
-    for mid, num in zip(tr_times, word_rate):  
+    for mid, num in zip(bin_times, word_rate):  
         if num < 1: continue
         word_times.extend(np.linspace(mid - half, mid + half, num, endpoint = False) + half / num)
-    return np.array(word_times), tr_times
+    return np.array(word_times), bin_times
