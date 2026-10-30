@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parser.add_argument("--experiment", type = str, required = True)
     parser.add_argument("--task", type = str, required = True)
     parser.add_argument("--model_dir", type = str, default = "models")
+    parser.add_argument("--word_times", type = str, default = "predicted", choices = ["predicted", "actual"])
     parser.add_argument("--metrics", nargs = "+", type = str, default = ["WER", "BLEU", "METEOR", "BERT"])
     parser.add_argument("--references", nargs = "+", type = str, default = [])
     parser.add_argument("--null", type = int, default = 10)
@@ -33,11 +34,12 @@ if __name__ == "__main__":
         rescale = False, 
         score = "recall")
 
-    # load prediction transcript
+    # load prediction transcript (run_decoder.py saves --word_times actual runs as <task>_actualtimes)
+    run = args.task if args.word_times == "predicted" else args.task + "_actualtimes"
     if args.model_dir != "models":
-        pred_path = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment, args.task + ".npz")
+        pred_path = os.path.join(config.RESULT_DIR, args.model_dir, args.subject, args.experiment, run + ".npz")
     else:
-        pred_path = os.path.join(config.RESULT_DIR, args.subject, args.experiment, args.task + ".npz")
+        pred_path = os.path.join(config.RESULT_DIR, args.subject, args.experiment, run + ".npz")
     pred_data = np.load(pred_path)
     pred_words, pred_times = pred_data["words"], pred_data["times"]
 
@@ -81,6 +83,6 @@ if __name__ == "__main__":
     
     save_location = os.path.join(config.REPO_DIR, "scores", args.model_dir, args.subject, args.experiment)
     os.makedirs(save_location, exist_ok = True)
-    np.savez(os.path.join(save_location, args.task), 
+    np.savez(os.path.join(save_location, run), 
              window_scores = window_scores, window_zscores = window_zscores, 
              story_scores = story_scores, story_zscores = story_zscores)
